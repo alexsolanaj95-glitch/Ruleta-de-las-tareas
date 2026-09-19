@@ -209,12 +209,13 @@ const FIJAS = [
 const nuevaFija = ([t,peso]) => ({t, peso, hecha:false, medias:false, fija:true});
 const pesoReal = x => x.medias ? x.peso*2 : x.peso;
 
-let S = { tareas: FIJAS.map(nuevaFija), reg:[], T:null };
+let S = { tareas: FIJAS.map(nuevaFija), reg:[], T:null, bloque:null };
 let rot = 0, girando = false, tic = null, abiertos = {};
 
 function cargar(){
   try{ const g = localStorage.getItem(CLAVE); if(g){ const p = JSON.parse(g); if(p && p.tareas) S = Object.assign(S, p); } }catch(e){}
   if(!Array.isArray(S.reg)) S.reg = [];
+  if(S.bloque && (!S.bloque.desde || Date.now() - S.bloque.desde > 3600000)) S.bloque = null;
   FIJAS.forEach((f,i) => { if(!S.tareas.find(x => x.fija && x.t === f[0])) S.tareas.splice(i, 0, nuevaFija(f)); });
 }
 function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(e){} }
@@ -222,6 +223,7 @@ function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(
 const pend = () => S.tareas.filter(x => !x.hecha);
 const color = (i,n) => `hsl(${Math.round(i*330/Math.max(n,1))} 55% ${i%2?58:46}%)`;
 const fmtFecha = iso => { const d = new Date(iso); return d.toLocaleDateString("es-ES",{day:"numeric",month:"short"}); };
+const fmtSeg = s => s >= 60 ? `${Math.floor(s/60)} min` + (s%60 ? ` ${s%60} s` : "") : `${s} s`;
 const fmtMin = m => m >= 60 ? `${Math.floor(m/60)} h ${m%60 ? (m%60)+" min" : ""}`.trim() : `${m} min`;
 
 /* ---------- rueda ---------- */
@@ -326,7 +328,9 @@ function pintarListas(){
     `${P.length} en la rueda` + (tandasHoy ? ` · ${tandasHoy} tanda${tandasHoy>1?"s":""} hoy` : "");
   const b = document.getElementById("girar");
   b.disabled = !P.length || girando || !!S.T;
-  b.textContent = !P.length ? "Rueda vacía" : (S.T ? (S.T.tipo === "tarea" ? "Estás en faena" : "Estás descansando") : "Girar");
+  b.textContent = !P.length ? "Rueda vacía"
+    : S.T ? (S.T.tipo === "tarea" ? "Estás en faena" : "Estás descansando")
+    : S.bloque ? `Girar · quedan ${fmtSeg(S.bloque.seg)} del bloque` : "Girar";
 }
 
 function pintar(){
@@ -553,22 +557,41 @@ function aviso(msg){
 }
 
 /* ---------- aviso sonoro ---------- */
-let AC = null;
-function pito(veces){
+let AC = null, sonando = [];
+function alarma(seg){
+  pararAlarma();
   try{
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if(AC.state === "suspended") AC.resume();
-    for(let i = 0; i < veces; i++){
-      const d = i*.3, o = AC.createOscillator(), g = AC.createGain();
-      o.type = "sine"; o.frequency.value = 880;
-      g.gain.setValueAtTime(.0001, AC.currentTime + d);
-      g.gain.exponentialRampToValueAtTime(.35, AC.currentTime + d + .02);
-      g.gain.exponentialRampToValueAtTime(.0001, AC.currentTime + d + .22);
+    const t0 = AC.currentTime;
+    for(let i = 0; i*.6 < seg; i++){
+      const d = i*.6, o = AC.createOscillator(), g = AC.createGain();
+      o.type = "square"; o.frequency.value = i%2 ? 1175 : 880;
+      g.gain.setValueAtTime(.0001, t0 + d);
+      g.gain.exponentialRampToValueAtTime(.22, t0 + d + .02);
+      g.gain.exponentialRampToValueAtTime(.0001, t0 + d + .32);
       o.connect(g); g.connect(AC.destination);
-      o.start(AC.currentTime + d); o.stop(AC.currentTime + d + .25);
+      o.start(t0 + d); o.stop(t0 + d + .34);
+      sonando.push(o);
     }
   }catch(e){}
-  try{ navigator.vibrate && navigator.vibrate([250,120,250]); }catch(e){}
+  try{ navigator.vibrate && navigator.vibrate(Array(Math.round(seg/.6)).fill([300,300]).flat()); }catch(e){}
+}
+function pararAlarma(){
+  sonando.forEach(o => { try{ o.stop(); }catch(e){} }); sonando = [];
+  try{ navigator.vibrate && navigator.vibrate(0); }catch(e){}
+}
+
+/* ---------- notificaciones (con la pantalla encendida) ---------- */
+if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+function pedirPermiso(){
+  try{ if("Notification" in window && Notification.permission === "default") Notification.requestPermission(); }catch(e){}
+}
+function avisar(titulo, cuerpo){
+  try{
+    if(!("Notification" in window) || Notification.permission !== "granted" || !navigator.serviceWorker) return;
+    navigator.serviceWorker.ready.then(r => r.showNotification(titulo, { body:cuerpo, tag:"ruleta", renotify:true })).catch(() => {});
+  }catch(e){}
 }
 
 /* ---------- relojes ---------- */
@@ -576,16 +599,45 @@ const resta = () => !S.T ? 0 : (S.T.pausa ? S.T.pausado : Math.max(0, Math.round
 const salida = () => document.getElementById("salida");
 
 function arrancar(tipo, segs, idx){
+  pararAlarma();
+  if(tipo === "tarea"){ S.bloque = null; pedirPermiso(); }
   S.T = { tipo, total:segs, fin: Date.now() + segs*1000, pausa:false, pausado:segs, idx, sonado:false };
-  guardar(); latir(); pintar();
+  guardar(); despierto(true); latir(); pintar();
 }
-function parar(){ S.T = null; guardar(); clearInterval(tic); tic = null; salida().innerHTML = ""; pintar(); }
+function parar(){ pararAlarma(); S.T = null; guardar(); clearInterval(tic); tic = null; despierto(false); salida().innerHTML = ""; pintar(); }
+
+/* pantalla encendida mientras corre un reloj */
+let wl = null;
+async function despierto(on){
+  try{
+    if(on && !wl && navigator.wakeLock && !document.hidden){
+      wl = await navigator.wakeLock.request("screen");
+      wl.addEventListener("release", () => { wl = null; });
+    }else if(!on && wl){ await wl.release(); wl = null; }
+  }catch(e){ wl = null; }
+}
+
+function tarjetaBloque(){
+  const c = document.createElement("div"); c.className = "tarjeta";
+  c.innerHTML = `<div class="rot">Bloque a medio gastar</div>
+    <div class="que">Te quedan ${fmtSeg(S.bloque.seg)}</div>
+    <div class="det">Sin descanso: gira y la siguiente arranca con lo que queda.</div>`;
+  const b = document.createElement("div"); b.className = "btns";
+  const g = document.createElement("button"); g.className = "b-acc"; g.textContent = "Girar";
+  g.onclick = girar;
+  b.append(g); c.append(b);
+  salida().innerHTML = ""; salida().appendChild(c);
+}
 
 function latir(){
   clearInterval(tic);
   tic = setInterval(() => {
     if(!S.T){ clearInterval(tic); return; }
-    if(!S.T.sonado && !S.T.pausa && resta() === 0){ S.T.sonado = true; guardar(); pito(S.T.tipo === "tarea" ? 3 : 2); }
+    if(!S.T.sonado && !S.T.pausa && resta() === 0){
+      S.T.sonado = true; guardar(); alarma(10);
+      const tarea = S.T.tipo === "tarea" ? S.tareas[S.T.idx] : null;
+      avisar(tarea ? "Se acabó la tanda" : "Se acabó el descanso", tarea ? tarea.t + " · Terminada o a medias" : "Vuelve a la ruleta");
+    }
     pintarReloj();
   }, 400);
   pintarReloj();
@@ -609,11 +661,12 @@ function girar(){
     girando = false;
     const t = P[i];
     const c = document.createElement("div"); c.className = "tarjeta";
+    const dur = S.bloque ? S.bloque.seg : TANDA;
     c.innerHTML = `<div class="rot">Te toca</div><div class="que">${t.t}</div>
-      <div class="det">${t.medias ? "La tenías a medias · " : ""}tanda de 15 min</div>`;
+      <div class="det">${t.medias ? "La tenías a medias · " : ""}${S.bloque ? "lo que queda del bloque: " + fmtSeg(dur) : "tanda de 15 min"}</div>`;
     const b = document.createElement("div"); b.className = "btns";
     const ir = document.createElement("button"); ir.className = "b-acc"; ir.textContent = "Empezar";
-    ir.onclick = () => arrancar("tarea", TANDA, S.tareas.indexOf(t));
+    ir.onclick = () => arrancar("tarea", dur, S.tareas.indexOf(t));
     const otra = document.createElement("button"); otra.textContent = "Otra";
     otra.onclick = () => { salida().innerHTML = ""; girar(); };
     b.append(ir, otra); c.append(b);
@@ -623,11 +676,19 @@ function girar(){
 }
 
 function cerrarTanda(tarea, res){
-  const usados = Math.round((S.T.total - resta())/60);
+  pararAlarma();
+  const sobra = resta();
+  const usados = Math.round((S.T.total - sobra)/60);
   apuntar(tarea, usados, res);
   if(res === "terminada") marcarHecha(tarea);
   else { tarea.medias = true; guardar(); }
-  arrancar("descanso", DESCANSO);
+  if(sobra > 0){
+    S.bloque = { seg: sobra, desde: Date.now() };
+    S.T = null; clearInterval(tic); tic = null; guardar();
+    tarjetaBloque(); pintar();
+  }else{
+    arrancar("descanso", DESCANSO);
+  }
 }
 
 function pintarReloj(){
@@ -693,11 +754,12 @@ document.getElementById("fichero").onchange = e => {
   const r = new FileReader(); r.onload = () => importar(r.result); r.readAsText(f, "utf-8");
   e.target.value = "";
 };
-document.addEventListener("visibilitychange", () => { if(!document.hidden && S.T) pintarReloj(); });
+document.addEventListener("visibilitychange", () => { if(!document.hidden && S.T){ pintarReloj(); despierto(true); } });
 
 cargar();
 pintar();
 if(S.T) latir();
+else if(S.bloque) tarjetaBloque();
 </script>
 </body>
 </html>
