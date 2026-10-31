@@ -25,8 +25,8 @@
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --bg:#17171a; --panel:#212126; --panel2:#2a2a30; --txt:#eceae6; --soft:#9c9a95; --line:#34343b;
-      --acc:#f97316; --acc-btn:#ea580c; --acc-suave:rgba(249,115,22,.14);
-      --ok:#7bb77b; --ok-btn:#3f8f46; --medias:#fbbf24; --descanso:#5eead4; --peligro:#f87171;
+      --acc:#f97316; --acc-btn:#c2410c; --acc-suave:rgba(249,115,22,.14);
+      --ok:#7bb77b; --ok-btn:#2f7a37; --medias:#fbbf24; --descanso:#5eead4; --peligro:#f87171;
       --aro:#0c0c0e; --luz:#ffcf70; --brillo-fondo:rgba(249,115,22,.11);
       --toast:#3a3a42; --toast-txt:#f3f1ec; --toast-acc:#fdba74;
       --shadow:0 2px 12px rgba(0,0,0,.45); --shadow2:0 18px 50px rgba(0,0,0,.6);
@@ -35,8 +35,8 @@
   :root[data-theme="dark"]{
     color-scheme:dark;
     --bg:#17171a; --panel:#212126; --panel2:#2a2a30; --txt:#eceae6; --soft:#9c9a95; --line:#34343b;
-    --acc:#f97316; --acc-btn:#ea580c; --acc-suave:rgba(249,115,22,.14);
-    --ok:#7bb77b; --ok-btn:#3f8f46; --medias:#fbbf24; --descanso:#5eead4; --peligro:#f87171;
+    --acc:#f97316; --acc-btn:#c2410c; --acc-suave:rgba(249,115,22,.14);
+    --ok:#7bb77b; --ok-btn:#2f7a37; --medias:#fbbf24; --descanso:#5eead4; --peligro:#f87171;
     --aro:#0c0c0e; --luz:#ffcf70; --brillo-fondo:rgba(249,115,22,.11);
     --toast:#3a3a42; --toast-txt:#f3f1ec; --toast-acc:#fdba74;
     --shadow:0 2px 12px rgba(0,0,0,.45); --shadow2:0 18px 50px rgba(0,0,0,.6);
@@ -109,7 +109,7 @@
   .seg button.on{background:var(--panel); color:var(--txt); box-shadow:0 1px 3px rgba(0,0,0,.14)}
 
   /* ---------- pestañas ---------- */
-  .tabs{position:relative; display:flex; margin:16px 0 18px; padding:4px; background:var(--panel);
+  .tabs{position:relative; display:flex; margin:16px 0 26px; padding:4px; background:var(--panel);
     border:1px solid var(--line); border-radius:14px}
   .tabs button{position:relative; z-index:1; flex:1; border:none; background:none; padding:9px; color:var(--soft); font-weight:650}
   .tabs button.on{color:var(--txt)}
@@ -140,7 +140,7 @@
   .sobre.premio .luz{animation:parpadeo .2s steps(1) 8}
   .sobre.premio .luz:nth-child(even){animation-delay:-.1s}
   @keyframes parpadeo{50%{opacity:.18}}
-  #aguja{position:absolute; top:-7px; left:50%; width:32px; height:42px; margin-left:-16px; z-index:3;
+  #aguja{position:absolute; top:-16px; left:50%; width:32px; height:42px; margin-left:-16px; z-index:3;
     transform-origin:50% 33%; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35)); pointer-events:none}
   #aguja svg{width:100%; height:100%}
   .aguja-p{fill:var(--acc-btn); stroke:#fff; stroke-width:2.4; stroke-linejoin:round}
@@ -154,12 +154,13 @@
   #girar{display:block; width:100%; max-width:350px; margin:20px auto 0; padding:16px; border:none; border-radius:16px;
     background:var(--acc-btn); color:#fff; font-size:1.08rem; font-weight:700; letter-spacing:.01em;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 8px 20px rgba(194,65,12,.3)}
-  #girar:disabled{opacity:.55; box-shadow:none}
+  #girar:disabled{opacity:1; background:var(--panel2); color:var(--soft); border:1px solid var(--line); box-shadow:none}
 
   /* ---------- tarjetas ---------- */
   .tarjeta{max-width:350px; margin:16px auto 0; padding:18px 16px 16px; text-align:center; background:var(--panel);
     border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow)}
   .tarjeta.entra{animation:entra .45s cubic-bezier(.2,.8,.25,1.15)}
+  .tarjeta{scroll-margin:16px 0 calc(24px + env(safe-area-inset-bottom))}
   @keyframes entra{from{opacity:0; transform:translateY(16px) scale(.96)}}
   .tarjeta .rot{font-size:.74rem; text-transform:uppercase; letter-spacing:.09em; color:var(--soft); font-weight:700}
   .tarjeta .que{font-size:1.4rem; font-weight:800; margin:4px 0; letter-spacing:-.015em;
@@ -170,6 +171,8 @@
   .btns button{flex:1 1 auto; min-width:min(100%, 90px); max-width:100%; padding:11px 12px; font-weight:650; white-space:nowrap;
     display:inline-flex; align-items:center; justify-content:center; gap:6px}
   .btns button span{overflow:hidden; text-overflow:ellipsis}
+  .btns.cuatro button{flex:1 1 calc(50% - 4px)}
+  .det b{color:var(--txt); font-weight:650}
   .btns button svg{width:16px; height:16px; flex:none}
   .b-ok{color:#fff !important; background:var(--ok-btn); border-color:var(--ok-btn)}
   .b-acc{color:#fff !important; background:var(--acc-btn); border-color:var(--acc-btn)}
@@ -199,7 +202,7 @@
 
   /* ---------- listas ---------- */
   .sec{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:28px 0 10px}
-  .enlace{border:none; background:none; color:var(--acc); font-weight:650; font-size:.85rem; padding:4px 2px}
+  .enlace{border:none; background:none; color:var(--acc); font-weight:650; font-size:.85rem; padding:10px 6px; margin:-10px -6px}
   ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
   .tarea{display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line);
     border-radius:16px; padding:4px 8px 4px 4px; transition:opacity .23s ease, transform .23s ease}
@@ -211,12 +214,14 @@
   .tarea .cuerpo:active{transform:none; background:var(--panel2)}
   .punto{width:12px; height:12px; border-radius:50%; flex:none; box-shadow:inset 0 0 0 2px rgba(255,255,255,.22)}
   .tarea .txt{display:flex; flex-direction:column; min-width:0}
-  .tarea .nom{font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tarea .nom{font-weight:650; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere}
   .tarea .meta{font-size:.76rem; color:var(--soft); margin-top:2px; display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px}
   .chip{display:inline-block; font-size:.68rem; padding:1px 7px; border-radius:10px; border:1px solid currentColor;
     font-weight:700; letter-spacing:.02em}
   .chip.medias{color:var(--medias)}
-  .chip.faena{color:var(--acc); animation:respira 1.6s ease-in-out infinite}
+  .chip.faena{color:var(--acc)}
+  .chip.faena::before{content:""; display:inline-block; width:6px; height:6px; margin-right:5px; vertical-align:1px;
+    border-radius:50%; background:currentColor; animation:respira 1.2s ease-in-out infinite}
   .tarea .accion{flex:none; display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border-radius:20px;
     font-size:.84rem; font-weight:650; color:var(--ok)}
   .tarea .accion svg{width:15px; height:15px}
@@ -232,8 +237,11 @@
     background:var(--toast); color:var(--toast-txt); border-radius:14px; box-shadow:var(--shadow2); font-size:.92rem;
     visibility:hidden; transition:transform .38s cubic-bezier(.2,.8,.2,1), visibility 0s .38s}
   #toast.on{transform:translate(-50%, 0); visibility:visible; transition:transform .38s cubic-bezier(.2,.8,.2,1), visibility 0s}
+  /* con una hoja abierta, los avisos salen arriba para no tapar sus botones */
+  body.con-hoja #toast{bottom:auto; top:calc(14px + env(safe-area-inset-top)); transform:translate(-50%, calc(-100% - 40px - env(safe-area-inset-top)))}
+  body.con-hoja #toast.on{transform:translate(-50%, 0)}
   #toast-txt{padding:2px 0}
-  #toast button{flex:none; background:none; border:none; color:var(--toast-acc); font-weight:700; padding:6px 8px}
+  #toast button{flex:none; background:none; border:none; color:var(--toast-acc); font-weight:700; padding:11px 12px; margin:-8px -4px -8px 0}
   #toast i{position:absolute; left:0; bottom:0; width:100%; height:3px; background:var(--toast-acc); opacity:.7;
     transform-origin:left; transform:scaleX(0)}
   #toast i.corre{animation:mengua var(--dur, 6s) linear forwards}
@@ -271,7 +279,7 @@
   .interruptor.on::after{transform:translateX(21px)}
   .interruptor:active:not(:disabled){transform:none}
   .fila-btn{display:flex; gap:8px; flex-wrap:wrap}
-  .fila-btn button{flex:1; min-width:130px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:600}
+  .fila-btn button{flex:1 1 auto; min-width:130px; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:600}
   .fila-btn button svg{width:16px; height:16px}
   .listo{width:100%; margin-top:20px; padding:13px; font-weight:700}
 
@@ -287,8 +295,9 @@
   .tot .det2{display:none; margin-top:10px; border-top:1px solid var(--line); padding-top:8px; font-size:.85rem; color:var(--soft)}
   .tot .f.abierto .det2{display:block; animation:aparece .3s ease}
   .linea{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:3px 0}
-  .linea .dcha{margin-left:auto; text-align:right}
-  .linea .x{flex:none; border:none; background:none; color:var(--soft); padding:2px 6px; font-size:1.05rem; line-height:1}
+  .linea > span:first-child{flex:1; min-width:0; overflow-wrap:anywhere}
+  .linea .dcha{white-space:nowrap; text-align:right}
+  .linea .x{flex:none; min-width:40px; min-height:40px; margin:-6px -10px -6px 0; border:none; background:none; color:var(--soft); font-size:1.25rem; line-height:1}
   .barra{height:4px; border-radius:2px; background:var(--line); margin-top:9px; overflow:hidden}
   .barra i{display:block; height:100%; background:var(--acc); border-radius:2px; transform-origin:left}
   .mesbox{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:8px}
@@ -322,6 +331,9 @@
   @keyframes ancho{from{transform:scaleX(0)}}
   @keyframes crece{from{transform:scaleY(0)}}
 
+  .hoja:focus{outline:none}
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap}
+
   /* confeti */
   .confeti{position:fixed; inset:0; z-index:70; pointer-events:none; overflow:hidden}
   .confeti i{position:absolute; width:8px; height:12px; margin:-6px 0 0 -4px; border-radius:2px}
@@ -335,7 +347,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.0</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.1</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -391,7 +403,7 @@
   </div>
   <div class="vacio" id="vacio" hidden></div>
   <button id="girar">Girar</button>
-  <div id="salida" aria-live="polite"></div>
+  <div id="salida"></div>
 
   <div class="sec" id="sec-rueda"><h2>En la rueda <span class="num" id="num-rueda">0</span></h2></div>
   <ul id="lista"></ul>
@@ -428,11 +440,12 @@
 </section>
 
 <div class="velo" id="velo"></div>
-<div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-tit" aria-hidden="true">
+<div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-tit" aria-hidden="true" tabindex="-1">
   <div class="asa"></div>
   <div id="hoja-cont"></div>
 </div>
 <div id="toast" role="status" aria-live="polite"><span id="toast-txt"></span><button id="toast-btn" hidden>Deshacer</button><i id="toast-barra"></i></div>
+<div id="anuncio" class="sr-only" role="status" aria-live="polite"></div>
 
 <script>
 /* ---------- datos ---------- */
@@ -464,10 +477,23 @@ const pesoReal = x => x.medias ? x.peso*2 : x.peso;
 const nombreCada = n => { const c = CADAS.find(([d]) => d === n); return c ? c[1].toLowerCase() : `cada ${n} días`; };
 const listaY = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " y " + a[a.length-1];
 const reduceMov = () => { try{ return matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } };
+// tras cada acción hay un instante en el que un segundo toque (un doble toque sin querer) no hace nada
+let bloqueo = 0;
+const bloquear = (ms = 400) => { bloqueo = Date.now() + ms; };
+document.addEventListener("click", e => { if(e.isTrusted && Date.now() < bloqueo){ e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+let segmentador = null;
+const graf = s => {   // letras "de verdad": no parte un emoji por la mitad
+  try{ if(!segmentador && window.Intl && Intl.Segmenter) segmentador = new Intl.Segmenter("es", {granularity:"grapheme"}); if(segmentador) return Array.from(segmentador.segment(s), x => x.segment); }catch(e){}
+  return Array.from(s);
+};
+const idValido = id => typeof id === "string" && /^[A-Za-z0-9_-]{2,40}$/.test(id);
+const sel = id => (window.CSS && CSS.escape) ? CSS.escape(id) : String(id).replace(/["\\]/g, "\\$&");
+function anunciar(t){ const a = $("anuncio"); if(!a) return; a.textContent = ""; setTimeout(() => { a.textContent = t; }, 60); }
+function verTarjeta(c){ try{ c.scrollIntoView({block:"nearest", behavior: reduceMov() ? "auto" : "smooth"}); }catch(e){} }
 
 let S = { v:2, tareas: FIJAS.map(nuevaFija), reg:[], T:null, bloque:null, cfg:{}, ultCopia:null, copiaLuego:0 };
 let ruedaPendiente = false;
-let rot = 0, girando = false, tic = null, abiertos = {}, premioId = null, firmaReloj = "", AC = null, tipoAlta = "suelta";
+let rot = 0, girando = false, tic = null, abiertos = Object.create(null), version = 0, premioId = null, firmaReloj = "", AC = null, tipoAlta = "suelta";
 
 const tareaPorId = id => S.tareas.find(x => x.id === id) || null;
 const existeNombre = (t, salvo) => S.tareas.some(y => y !== salvo && y.t.toLowerCase() === t.toLowerCase());
@@ -486,7 +512,7 @@ function cargar(){
   const ahora = Date.now();
   S.tareas = S.tareas.filter(x => x && typeof x.t === "string" && x.t.trim());
   S.tareas.forEach(x => {
-    if(!x.id) x.id = nuevoId();
+    if(!idValido(x.id) || S.tareas.some(y => y !== x && y.id === x.id)) x.id = nuevoId();
     x.peso = Math.min(5, Math.max(1, Math.round(+x.peso) || 1));
     x.hecha = !!x.hecha; x.medias = !!x.medias; x.fija = !!x.fija;
     if(typeof x.min !== "number" || !(x.min >= 0)) x.min = 0;
@@ -507,8 +533,14 @@ function cargar(){
     delete S.T.idx;
     if(S.T.tipo === "tarea" && !tareaPorId(S.T.id)) S.T = null;
   }
+  // se guarda ya lo migrado, para que no se rehaga (ni se corra la fecha de vuelta) en cada arranque
+  if(p && Array.isArray(p.tareas)) guardar();
 }
-function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(e){} }
+function guardar(){
+  version++;
+  if(toastDeshacer) cerrarToast();   // cualquier cambio posterior retira el «Deshacer» que hubiera pendiente
+  try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(e){}
+}
 
 const pend = () => S.tareas.filter(x => !x.hecha);
 const color = (i,n) => `hsl(${Math.round(i*330/Math.max(n,1))} 58% ${i%2?58:46}%)`;
@@ -561,14 +593,17 @@ function toast(msg, deshacer, dur){
 }
 function cerrarToast(){ clearTimeout(toastT); $("toast").classList.remove("on"); toastDeshacer = null; }
 function foto(){ return JSON.stringify({ tareas:S.tareas, reg:S.reg, cfg:S.cfg }); }
-function deshacerDe(f){
+function deshacerDe(f, v){
   return () => {
+    bloquear();
+    // solo si no ha cambiado nada más desde entonces: así nunca se lleva por delante otra cosa
+    if(version !== v){ toast("Ya no se puede deshacer: ha habido otros cambios después"); return; }
     const p = JSON.parse(f);
     S.tareas = p.tareas; S.reg = p.reg; S.cfg = p.cfg;
     cerrarHoja(true); guardar(); aplicarTema(); pintar(); toast("Deshecho");
   };
 }
-function accion(msg, fn){ const f = foto(); fn(); guardar(); pintar(); toast(msg, deshacerDe(f)); }
+function accion(msg, fn){ const f = foto(); fn(); guardar(); const v = version; pintar(); toast(msg, deshacerDe(f, v)); bloquear(); }
 
 /* ---------- utilidades de interfaz ---------- */
 function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
@@ -610,10 +645,14 @@ function interruptor(on, cambio, etiqueta){
 let alCerrar = null;
 function abrirHoja(construir, cerrarCb){
   const h = $("hoja");
+  cerrarToast(); bloquear();
   construir($("hoja-cont")); alCerrar = cerrarCb || null;
   h.style.transform = ""; h.scrollTop = 0;
   $("velo").classList.add("on"); h.classList.add("on"); h.setAttribute("aria-hidden", "false");
   document.body.classList.add("con-hoja");
+  // lo de detrás queda inerte (ni teclado ni lector de pantalla) mientras la hoja está abierta
+  [...document.body.children].forEach(e => { if(!["hoja", "velo", "toast", "anuncio"].includes(e.id) && e.tagName !== "SCRIPT") e.inert = true; });
+  try{ h.focus({preventScroll:true}); }catch(e){}
 }
 function cerrarHoja(forzar){
   const h = $("hoja");
@@ -622,7 +661,9 @@ function cerrarHoja(forzar){
   if(f && !forzar) f();
   $("velo").classList.remove("on"); h.classList.remove("on"); h.setAttribute("aria-hidden", "true"); h.style.transform = "";
   document.body.classList.remove("con-hoja");
+  [...document.body.children].forEach(e => { e.inert = false; });
   if(h.contains(document.activeElement)) document.activeElement.blur();
+  bloquear();
 }
 (() => {
   // arrastrar la hoja hacia abajo la cierra
@@ -652,9 +693,13 @@ function editar(x){
   const validar = () => {
     const y = tareaPorId(id);
     if(!inp || !y) return;
-    const v = inp.value.trim();
+    const v = inp.value.trim().replace(/;/g, ",");
     if(!v || v === y.t){ inp.value = y.t; return; }
     if(existeNombre(v, y)){ toast("Ya hay una tarea con ese nombre"); inp.value = y.t; return; }
+    // el historial de otra tarea (p. ej. una fija borrada) no se mezcla con el de esta
+    if(S.reg.some(r => !!r.fija === y.fija && r.t !== y.t && r.t.toLowerCase() === v.toLowerCase())){
+      toast("Ese nombre ya sale en el registro de otra tarea; elige otro"); inp.value = y.t; return;
+    }
     renombrar(y, v);
   };
   const pinta = c => {
@@ -667,7 +712,8 @@ function editar(x){
     const f1 = campo(c, "Nombre");
     inp = el("input"); inp.type = "text"; inp.value = y.t; inp.maxLength = 60; inp.autocomplete = "off";
     inp.setAttribute("enterkeyhint", "done"); inp.setAttribute("aria-label", "Nombre de la tarea");
-    inp.onchange = validar; inp.onkeydown = e => { if(e.key === "Enter") inp.blur(); };
+    inp.onchange = validar;
+    inp.onkeydown = e => { if(e.key === "Enter") inp.blur(); if(e.key === "Escape"){ const z = tareaPorId(id); if(z) inp.value = z.t; } };
     f1.append(inp);
 
     const f2 = campo(c, "Tipo");
@@ -776,9 +822,9 @@ function pintarRueda(){
   const g = $("giro"), P = pend(), disco = $("disco");
   g.innerHTML = "";
   if(!P.length){ disco.classList.remove("premio"); return; }
-  const R = 138;
+  const R = 138, segs = segmentos(P);
   const pt = a => { const r = (a-90)*Math.PI/180; return [150+R*Math.cos(r), 150+R*Math.sin(r)]; };
-  segmentos(P).forEach(({x, a0, a1}, i) => {
+  segs.forEach(({x, a0, a1}, i) => {
     const seg = a1 - a0;
     const p = document.createElementNS(NS, "path");
     if(P.length === 1) p.setAttribute("d", `M150,150 m-${R},0 a${R},${R} 0 1,0 ${R*2},0 a${R},${R} 0 1,0 -${R*2},0`);
@@ -800,13 +846,28 @@ function pintarRueda(){
     t.setAttribute("font-size", seg < 14 ? 8 : seg < 24 ? 10 : 12);
     t.setAttribute("style", "paint-order:stroke; stroke:rgba(0,0,0,.4); stroke-width:2.2px");
     t.setAttribute("data-id", x.id);
-    const nom = x.t.replace(/^Limpiar /, "");
-    t.textContent = (x.medias ? "› " : "") + (nom.length > 15 ? nom.slice(0, 14) + "…" : nom);
+    const nom = x.t.replace(/^Limpiar /, ""), gs = graf(nom);
+    t.textContent = (x.medias ? "› " : "") + (gs.length > 15 ? gs.slice(0, 14).join("") + "…" : nom);
     g.appendChild(t);
   });
   const ganador = premioId && P.some(x => x.id === premioId);
   disco.classList.toggle("premio", !!ganador);
-  if(ganador) g.querySelectorAll(`[data-id="${premioId}"]`).forEach(e => e.classList.add("gana"));
+  if(ganador){
+    g.querySelectorAll(`[data-id="${sel(premioId)}"]`).forEach(e => e.classList.add("gana"));
+    // si la rueda ha cambiado y la aguja ya no señala a la que tocó, se recoloca (por el camino corto)
+    const z = segs.find(q => q.x.id === premioId), a = ((360 - (rot % 360)) % 360 + 360) % 360;
+    if(z && (a < z.a0 || a >= z.a1)){
+      let d = (((360 - (z.a0 + z.a1)/2) % 360) + 360) % 360 - ((rot % 360) + 360) % 360;
+      if(d > 180) d -= 360; if(d <= -180) d += 360;
+      recolocar(rot + d);
+    }
+  }
+}
+function recolocar(nueva){
+  const disco = $("disco");
+  rot = nueva; clearTimeout(recolocar.t);
+  if(!reduceMov()){ disco.style.transition = "transform .5s cubic-bezier(.3,.7,.2,1)"; recolocar.t = setTimeout(() => { if(!girando) disco.style.transition = ""; }, 600); }
+  disco.style.transform = `rotate(${rot}deg)`;
 }
 function construirLuces(){
   const g = $("luces"); g.innerHTML = "";
@@ -850,8 +911,10 @@ const vibrar = ms => { try{ if(S.cfg.sonidos && navigator.vibrate) navigator.vib
 function girar(){
   const P = pend();
   if(girando || !P.length || S.T) return;
-  girando = true; cerrarAlta(); salida().innerHTML = ""; quitarPremio(); pintarListas();
+  girando = true; bloquear(); cerrarAlta(); salida().innerHTML = ""; quitarPremio(); pintarListas();
   audioCtx();
+  const disco = $("disco"), aguja = $("aguja"), sobre = $("sobre");
+  clearTimeout(recolocar.t); disco.style.transition = "";
   const segs = segmentos(P), total = P.reduce((a,x) => a + pesoReal(x), 0);
   let r = Math.random()*total, i = 0;
   for(let k = 0, acum = 0; k < P.length; k++){ acum += pesoReal(P[k]); if(r < acum){ i = k; break; } }
@@ -859,26 +922,19 @@ function girar(){
   const centro = s.a0 + ancho/2 + (Math.random()-.5)*ancho*.6;
   const corto = reduceMov();
   const desde = rot;
-  const hasta = rot + ((((360 - centro) - (rot % 360)) % 360) + 360) % 360 + 360*(corto ? 1 : 5 + Math.floor(Math.random()*2));
-  const dur = corto ? 900 : 4800 + Math.random()*700;
-  const disco = $("disco"), aguja = $("aguja"), sobre = $("sobre"), fronteras = segs.map(z => z.a1);
+  const hasta = rot + ((((360 - centro) - (rot % 360)) % 360) + 360) % 360 + (corto ? 0 : 360*(5 + Math.floor(Math.random()*2)));
+  const dur = 4800 + Math.random()*700, fronteras = segs.map(z => z.a1);
   sobre.classList.remove("premio"); sobre.classList.add("girando");
   const segEn = deg => { const a = ((360 - (deg % 360)) % 360 + 360) % 360; let k = 0; while(k < fronteras.length - 1 && a >= fronteras[k]) k++; return k; };
   const ease = t => 1 - Math.pow(1 - t, 4);
   let t0 = null, ultimo = segEn(desde), tUlt = -1e9, acabado = false;
   const fin = () => {
     if(acabado) return; acabado = true;
-    rot = hasta; aguja.style.transform = "";
-    girando = false; sobre.classList.remove("girando");
-    const t = tareaPorId(P[i].id), cambio = ruedaPendiente;
-    ruedaPendiente = false;
-    if(!t || t.hecha){ disco.style.transform = `rotate(${rot}deg)`; pintar(); return; }
-    if(cambio){
-      // la lista cambió mientras giraba: se recoloca la rueda para que la aguja quede sobre la que toca
-      const z = segmentos(pend()).find(q => q.x.id === t.id);
-      if(z) rot = rot - (((rot % 360) + 360) % 360) + (((360 - (z.a0 + z.a1)/2) % 360) + 360) % 360;
-    }
-    disco.style.transform = `rotate(${rot}deg)`;
+    rot = hasta; disco.style.transform = `rotate(${rot}deg)`; aguja.style.transform = "";
+    girando = false; ruedaPendiente = false; sobre.classList.remove("girando");
+    const t = tareaPorId(P[i].id);
+    if(!t || t.hecha){ pintar(); return; }
+    // pintarRueda recoloca la rueda si la lista cambió mientras giraba y la aguja ya no señala a la ganadora
     premioId = t.id; pintarRueda();
     void sobre.getBoundingClientRect(); sobre.classList.add("premio");
     campanita(); vibrar([18, 40, 18]);
@@ -886,6 +942,7 @@ function girar(){
     tarjetaPremio(t, color(P2.indexOf(t), P2.length));
     pintarListas();
   };
+  if(corto){ fin(); return; }   // con «reducir movimiento» no hay giro: la rueda se para directamente en la que toca
   const paso = now => {
     if(acabado) return;
     if(t0 === null) t0 = now;
@@ -912,7 +969,7 @@ function tarjetaPremio(t, col){
   }, ICON.play));
   b.append(boton("Otra", "", () => { salida().innerHTML = ""; girar(); }));
   c.append(b);
-  salida().innerHTML = ""; salida().appendChild(c);
+  salida().innerHTML = ""; salida().appendChild(c); verTarjeta(c); anunciar("Te toca " + t.t);
 }
 
 /* ---------- listas ---------- */
@@ -947,7 +1004,7 @@ function completar(x){
   else { const k = S.tareas.indexOf(x); if(k >= 0) S.tareas.splice(k, 1); }
 }
 function salidaAnimada(id, fn){
-  const li = document.querySelector(`.tarea[data-id="${id}"]`);
+  const li = document.querySelector(`.tarea[data-id="${sel(id)}"]`);
   if(li && li.classList.contains("sale")) return;
   if(!li || reduceMov()){ fn(); return; }
   li.classList.add("sale"); setTimeout(fn, 230);
@@ -1009,10 +1066,23 @@ function pintar(){
     if(salida().querySelector(".premio-card")) salida().innerHTML = "";
   }
   pintarRueda(); pintarListas(); pintarRegistro(); pintarAvisoCopia();
-  const vacio = pend().length === 0;
-  $("caja").hidden = vacio; $("vacio").hidden = !vacio;
-  $("girar").hidden = vacio; $("sec-rueda").hidden = vacio; $("devolver-todas").hidden = vacio;
-  if(vacio) pintarVacio(); else $("vacio").dataset.html = "";
+  const vacio = pend().length === 0, conReloj = !!S.T;
+  // con un reloj en marcha la rueda se aparta, y el reloj y sus botones quedan arriba, a la vista
+  $("caja").hidden = vacio || conReloj; $("girar").hidden = vacio || conReloj; $("vacio").hidden = !vacio || conReloj;
+  $("sec-rueda").hidden = vacio; $("devolver-todas").hidden = vacio;
+  if(vacio){
+    pintarVacio();
+    if(salida().querySelector(".bloque-card")) salida().innerHTML = "";
+  }else $("vacio").dataset.html = "";
+  actualizarPremio();
+}
+function actualizarPremio(){
+  // si se edita la que ha tocado (o la tanda general) antes de Empezar, la tarjeta se pone al día
+  const pc = salida().querySelector(".premio-card"), x = premioId && tareaPorId(premioId);
+  if(!pc || !x || x.hecha) return;
+  const P = pend(), dur = S.bloque ? S.bloque.seg : durTarea(x);
+  pc.querySelector(".que").innerHTML = `<span class="punto" style="background:${color(P.indexOf(x), P.length)}"></span>${esc(x.t)}`;
+  pc.querySelector(".det").textContent = (x.medias ? "La tenías a medias · " : "") + (S.bloque ? "lo que queda del bloque: " + fmtSeg(dur) : "tanda de " + fmtSeg(dur));
 }
 
 /* celebración */
@@ -1057,7 +1127,7 @@ function nombresFijas(){
 }
 
 function barrasMes(lineas){
-  const meses = ultimosMeses(12), por = {};
+  const meses = ultimosMeses(12), por = Object.create(null);
   lineas.forEach(r => { const k = keyDe(r.fecha); por[k] = (por[k]||0) + r.min; });
   const max = Math.max(1, ...meses.map(m => por[m.key]||0));
   const wrap = el("div", "barras"), capt = el("div", "capt");
@@ -1104,7 +1174,7 @@ function pintarMesActual(){
 function pintarMapa(){
   const bloque = $("bloque-mapa");
   if(!S.reg.length){ bloque.hidden = true; return; }
-  const meses = ultimosMeses(12), por = {};
+  const meses = ultimosMeses(12), por = Object.create(null);
   S.reg.filter(r => r.fija).forEach(r => { const k = r.t + "|" + keyDe(r.fecha); por[k] = (por[k]||0) + r.min; });
   const NF = nombresFijas();
   const filas = NF.actuales.concat(NF.antiguas.filter(t => meses.some(m => por[t + "|" + m.key])));
@@ -1138,18 +1208,18 @@ function pintarCurio(){
   const c = $("curio"); c.innerHTML = "";
   const add = (tit, txt) => { const d = el("div"); d.innerHTML = `<span>${tit}</span>${txt}`; c.appendChild(d); };
 
-  const porMes = {}; R.forEach(r => { const k = keyDe(r.fecha); porMes[k] = (porMes[k]||0) + r.min; });
+  const porMes = Object.create(null); R.forEach(r => { const k = keyDe(r.fecha); porMes[k] = (porMes[k]||0) + r.min; });
   const [mk, mv] = Object.entries(porMes).sort((a,b) => b[1]-a[1])[0];
   add("El mes más duro", `${MESES[+mk.slice(5)-1]} ${mk.slice(0,4)}, con ${fmtMin(mv)}.`);
 
-  const porDia = {}; R.forEach(r => { const k = new Date(r.fecha).toDateString(); porDia[k] = (porDia[k]||0) + r.min; });
+  const porDia = Object.create(null); R.forEach(r => { const k = new Date(r.fecha).toDateString(); porDia[k] = (porDia[k]||0) + r.min; });
   const [dk, dv] = Object.entries(porDia).sort((a,b) => b[1]-a[1])[0];
   add("El día que más le diste", `${new Date(dk).toLocaleDateString("es-ES",{weekday:"long", day:"numeric", month:"long"})}: ${fmtMin(dv)} seguidos, con descansos.`);
 
-  const mesesPor = {}; R.filter(r => r.fija).forEach(r => { (mesesPor[r.t] = mesesPor[r.t] || new Set()).add(keyDe(r.fecha)); });
+  const mesesPor = Object.create(null); R.filter(r => r.fija).forEach(r => { (mesesPor[r.t] = mesesPor[r.t] || new Set()).add(keyDe(r.fecha)); });
   const cons = Object.entries(mesesPor).sort((a,b) => b[1].size - a[1].size)[0];
   if(cons && cons[1].size > 1) add("La más constante", `${esc(corto(cons[0]))}: ha caído en ${cons[1].size} meses distintos.`);
-  const ult = {}; R.filter(r => r.fija).forEach(r => { if(!ult[r.t] || r.fecha > ult[r.t]) ult[r.t] = r.fecha; });
+  const ult = Object.create(null); R.filter(r => r.fija).forEach(r => { if(!ult[r.t] || r.fecha > ult[r.t]) ult[r.t] = r.fecha; });
   const act = nombresFijas().actuales;
   if(act.length){
     const [ot, of] = act.map(t => [t, ult[t]]).sort((a,b) => (a[1]||"").localeCompare(b[1]||""))[0];
@@ -1160,7 +1230,7 @@ function pintarCurio(){
     }
   }
 
-  const res = {}; R.filter(r => r.fija).forEach(r => { const o = res[r.t] = res[r.t] || {n:0, m:0}; o.n++; if(r.res !== "terminada") o.m++; });
+  const res = Object.create(null); R.filter(r => r.fija).forEach(r => { const o = res[r.t] = res[r.t] || {n:0, m:0}; o.n++; if(r.res !== "terminada") o.m++; });
   const peor = Object.entries(res).filter(([,o]) => o.n >= 2 && o.m > 0).sort((a,b) => b[1].m/b[1].n - a[1].m/a[1].n)[0];
   if(peor) add("La que más se te resiste", `${esc(corto(peor[0]))}: ${peor[1].m} de ${peor[1].n} tandas se quedaron a medias.`);
 
@@ -1169,7 +1239,7 @@ function pintarCurio(){
 }
 
 function pintarRegistro(){
-  const porTarea = {};
+  const porTarea = Object.create(null);
   S.reg.forEach(r => {
     const k = r.fija ? r.t : "__sueltas";
     const o = porTarea[k] || (porTarea[k] = {t:k, veces:0, min:0, ult:null, lineas:[]});
@@ -1242,12 +1312,12 @@ function pintarAvisoCopia(){
   $("copia-info").textContent = infoCopia() + " La copia es un archivo que puedes guardar en Archivos, en Drive o mandártelo a ti mismo.";
 }
 function exportar(){
-  const cab = "clase;fecha;tarea;tipo;minutos;resultado;peso;hecha;a_medias;cada_dias;hecha_en;tanda_min";
+  const cab = "clase;fecha;tarea;tipo;minutos;resultado;peso;hecha;a_medias;cada_dias;hecha_en;tanda_min;id";
   const L = s => String(s).replace(/[;\r\n]+/g, ",");
-  const filas = S.reg.map(r => ["registro", r.fecha, L(r.t), r.fija ? "fija" : "suelta", r.min, L(r.res), "", "", "", "", "", ""].join(";"));
+  const filas = S.reg.map(r => ["registro", r.fecha, L(r.t), r.fija ? "fija" : "suelta", r.min, L(r.res), "", "", "", "", "", "", ""].join(";"));
   const tareas = S.tareas.map(x => ["tarea", "", L(x.t), x.fija ? "fija" : "suelta", "", "", x.peso, x.hecha ? "sí" : "no", x.medias ? "sí" : "no",
-    x.fija ? (x.cada || 0) : "", x.hechaEn ? new Date(x.hechaEn).toISOString() : "", x.min || ""].join(";"));
-  const conf = [["tanda", S.cfg.tanda], ["descanso", S.cfg.descanso]].map(([k, v]) => ["config", "", k, "", v, "", "", "", "", "", "", ""].join(";"));
+    x.fija ? (x.cada || 0) : "", x.hechaEn ? new Date(x.hechaEn).toISOString() : "", x.min || 0, x.id].join(";"));
+  const conf = [["tanda", S.cfg.tanda], ["descanso", S.cfg.descanso]].map(([k, v]) => ["config", "", k, "", v, "", "", "", "", "", "", "", ""].join(";"));
   const csv = "﻿" + [cab, ...filas, ...tareas, ...conf].join("\n");
   const nombre = "ruleta-tareas-" + new Date().toISOString().slice(0,10) + ".csv";
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
@@ -1265,44 +1335,70 @@ function exportar(){
   hecho();
 }
 function importar(texto){
-  const lineas = texto.replace(/^﻿/, "").split(/\r?\n/).filter(l => l.trim());
+  const lineas = texto.replace(/^\ufeff/, "").split(/\r?\n/).filter(l => l.trim());
   if(lineas.length < 2){ toast("Ese archivo no trae nada que recuperar"); return; }
-  const nuevo = /^clase;/.test(lineas[0]);
+  const cab = lineas[0].split(";").map(v => v.trim());
+  const nuevo = cab[0] === "clase", conTmin = cab.includes("tanda_min");
   const f = foto();
-  let n = 0, nt = 0, nc = 0;
+  const fechas = new Set(S.reg.map(r => r.fecha));
+  const N = s => String(s).replace(/[;\r\n]+/g, ",").trim().toLowerCase();
+  const filasTarea = [];
+  let n = 0, nc = 0, ultima = 0;
   lineas.slice(1).forEach(l => {
     const c = l.split(";").map(v => v.trim());
     const fila = nuevo ? c : ["registro", ...c];
-    const [clase, fecha, t, tipo, min, res, peso, hecha, medias, cada, hechaEn, tmin] = fila;
+    const [clase, fecha, t, tipo, min, res] = fila;
     if(clase === "registro"){
-      if(!fecha || !t || !min || isNaN(+min) || isNaN(+new Date(fecha))) return;
-      if(S.reg.some(r => r.fecha === fecha && r.t === t)) return;
-      S.reg.push({ t, fija: tipo === "fija", fecha, min: Math.max(1, Math.round(+min)), res: res || "terminada" }); n++;
+      // una tanda se reconoce por su fecha (lleva milésimas), aunque su tarea se haya renombrado después
+      if(!fecha || !t || !/^\d{4}-\d{2}-\d{2}T/.test(fecha) || isNaN(+new Date(fecha)) || !(+min > 0)) return;
+      ultima = Math.max(ultima, +new Date(fecha));
+      if(fechas.has(fecha)) return;
+      fechas.add(fecha);
+      S.reg.push({ t, fija: tipo === "fija", fecha, min: Math.min(240, Math.max(1, Math.round(+min))), res: res || "terminada" }); n++;
     }else if(clase === "tarea" && t){
-      let x = S.tareas.find(y => y.t === t);
-      if(!x){ x = { id:nuevoId(), t, peso:1, hecha:false, medias:false, fija: tipo === "fija", min:0 }; S.tareas.push(x); }
+      filasTarea.push(fila);
+    }else if(clase === "config" && (t === "tanda" || t === "descanso") && +min > 0){
+      S.cfg[t] = t === "tanda" ? Math.min(60, Math.max(5, Math.round(+min))) : Math.min(30, Math.max(5, Math.round(+min))); nc++;
+    }
+  });
+  // las tareas quedan como en la copia y en su orden; se reaprovechan las que ya había para conservar su id
+  let quitadas = 0;
+  if(filasTarea.length){
+    const usadas = new Set(), lista = [];
+    const enFaena = S.T && S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null;
+    filasTarea.forEach(([, , t, tipo, , , peso, hecha, medias, cada, hechaEn, tmin, id]) => {
+      const libre = y => !usadas.has(y);
+      let x = (idValido(id) && S.tareas.find(y => libre(y) && y.id === id))
+        || S.tareas.find(y => libre(y) && N(y.t) === N(t) && (y.fija ? "fija" : "suelta") === tipo)
+        || S.tareas.find(y => libre(y) && N(y.t) === N(t));
+      if(!x) x = { id: idValido(id) && !tareaPorId(id) ? id : nuevoId(), t, peso:1, hecha:false, medias:false, fija:false, min:0 };
+      usadas.add(x);
       if(tipo === "fija" || tipo === "suelta") x.fija = tipo === "fija";
       if(peso) x.peso = Math.min(5, Math.max(1, Math.round(+peso) || 1));
       x.hecha = hecha === "sí"; x.medias = medias === "sí";
       if(x.fija){
-        if(cada && !isNaN(+cada)) x.cada = Math.max(0, Math.round(+cada));
+        if(cada && !isNaN(+cada)) x.cada = Math.min(365, Math.max(0, Math.round(+cada)));
         else if(typeof x.cada !== "number") x.cada = CADA_DEF;
         const he = hechaEn ? +new Date(hechaEn) : NaN;
         x.hechaEn = x.hecha ? (isNaN(he) ? Date.now() : he) : null;
       }else{ x.hecha = false; x.hechaEn = null; }
-      if(tmin && !isNaN(+tmin)) x.min = Math.max(0, Math.round(+tmin));
-      nt++;
-    }else if(clase === "config" && (t === "tanda" || t === "descanso") && +min > 0){
-      S.cfg[t] = Math.min(t === "tanda" ? 120 : 60, Math.max(1, Math.round(+min))); nc++;
-    }
-  });
+      if(conTmin) x.min = tmin && !isNaN(+tmin) ? Math.min(60, Math.max(0, Math.round(+tmin))) : 0;
+      lista.push(x);
+    });
+    if(enFaena && !usadas.has(enFaena)) lista.push(enFaena);   // la que está en faena no se quita
+    quitadas = S.tareas.filter(x => !lista.includes(x)).length;
+    S.tareas = lista;
+  }
+  if(!S.ultCopia) S.ultCopia = ultima || Date.now();
   revisarVueltas(true);
-  guardar(); pintar();
+  guardar(); const v = version; pintar();
+  if(foto() === f){ toast("Esa copia ya estaba recuperada: no trae nada nuevo"); return; }
   const partes = [];
-  if(n) partes.push(`${n} tanda${n>1?"s":""}`);
-  if(nt) partes.push(`${nt} tarea${nt>1?"s":""}`);
-  if(partes.length || nc) toast(partes.length ? `Recuperadas ${partes.join(" y ")}` : "Ajustes recuperados", deshacerDe(f), 9000);
-  else toast("No había nada nuevo en esa copia");
+  if(n) partes.push(`${n} tanda${n > 1 ? "s" : ""} nueva${n > 1 ? "s" : ""}`);
+  if(filasTarea.length) partes.push(`${filasTarea.length} tarea${filasTarea.length > 1 ? "s" : ""}`);
+  if(!partes.length && nc) partes.push("los ajustes");
+  toast(`Copia recuperada: ${partes.join(" y ")}` + (quitadas ? ` (se quitan ${quitadas} que no estaban en la copia)` : ""), deshacerDe(f, v), 9000);
+  bloquear();
 }
 function pedirPersistencia(){ try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); }catch(e){} }
 
@@ -1315,19 +1411,21 @@ const au = new Audio(); au.preload = "auto"; au.setAttribute("playsinline","");
 let urlPista = null;
 function pista(segSilencio, segAlarma){
   // 16 bits: a 8 bits el zumbido de fondo sonaba rasposo, porque saltaba entre escalones
-  const rate = 8000, n = Math.max(0, Math.round(segSilencio))*rate, na = Math.round(segAlarma)*rate;
-  const bytes = (n + na)*2;
-  const buf = new Uint8Array(44 + bytes), dv = new DataView(buf.buffer);
-  const str = (o,s) => { for(let i = 0; i < s.length; i++) buf[o+i] = s.charCodeAt(i); };
+  const rate = 8000, seg = Math.max(0, Math.round(segSilencio)), na = Math.round(segAlarma)*rate;
+  const bytes = (seg*rate + na)*2;
+  const cab = new Uint8Array(44), dv = new DataView(cab.buffer);
+  const str = (o,s) => { for(let i = 0; i < s.length; i++) cab[o+i] = s.charCodeAt(i); };
   str(0,"RIFF"); dv.setUint32(4, 36+bytes, true); str(8,"WAVE"); str(12,"fmt ");
   dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true);
   dv.setUint32(24,rate,true); dv.setUint32(28,rate*2,true); dv.setUint16(32,2,true); dv.setUint16(34,16,true);
   str(36,"data"); dv.setUint32(40, bytes, true);
   // fondo: 20 Hz a amplitud ínfima (unas 2000 veces por debajo del máximo). Inaudible,
   // pero para iOS la web sigue reproduciendo audio y no la congela al bloquear.
-  const per = Math.round(rate/20);
-  for(let i = 0; i < n; i++) dv.setInt16(44 + i*2, Math.round(16*Math.sin(2*Math.PI*(i%per)/per)), true);
+  // Se fabrica un segundo y se repite: 8000 muestras son justo 20 periodos de 400, así que empalma sin saltos.
+  const per = Math.round(rate/20), s1 = new Uint8Array(rate*2), d1 = new DataView(s1.buffer);
+  for(let i = 0; i < rate; i++) d1.setInt16(i*2, Math.round(16*Math.sin(2*Math.PI*(i%per)/per)), true);
   // alarma: pitidos alternando 880 y 1175 Hz, 0,32 s sonando y 0,28 callado
+  const al = new Uint8Array(na*2), da = new DataView(al.buffer);
   for(let i = 0; i < na; i++){
     const t = i/rate, k = Math.floor(t/.6), ph = t - k*.6;
     let v = 0;
@@ -1335,9 +1433,9 @@ function pista(segSilencio, segAlarma){
       const f = k%2 ? 1175 : 880, env = Math.min(1, ph/.01) * Math.min(1, (.32-ph)/.03);
       v = 26000*env*(0.75*Math.sin(2*Math.PI*f*t) + 0.25*Math.sin(2*Math.PI*2*f*t));
     }
-    dv.setInt16(44 + (n+i)*2, Math.max(-32767, Math.min(32767, Math.round(v))), true);
+    da.setInt16(i*2, Math.max(-32767, Math.min(32767, Math.round(v))), true);
   }
-  return URL.createObjectURL(new Blob([buf], {type:"audio/wav"}));
+  return URL.createObjectURL(new Blob([cab, ...new Array(seg).fill(s1), al], {type:"audio/wav"}));
 }
 function sonar(segSilencio, segAlarma, titulo){
   try{
@@ -1372,7 +1470,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.0";
+const VERSION = "2.1";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
@@ -1406,27 +1504,28 @@ function arrancar(tipo, segs, id, vuelta){
   premioId = null; firmaReloj = "";
   S.T = { tipo, total:segs, fin: Date.now() + segs*1000, pausa:false, pausado:segs, id:id || null, vuelta:vuelta || null, sonado:false };
   audioVivo();
-  guardar(); despierto(true); latir(); pintar();
+  guardar(); despierto(true); latir(); pintar(); bloquear();
 }
 function parar(){
   audioParar(); S.T = null; guardar(); clearInterval(tic); tic = null; despierto(false);
   firmaReloj = ""; document.title = "Ruleta de tareas";
-  salida().innerHTML = ""; pintar();
+  salida().innerHTML = ""; pintar(); bloquear();
 }
 function alargar(seg){
   if(!S.T) return;
   const r = resta();
   S.T.total += seg; S.T.sonado = false;
+  if(S.T.tipo === "tarea") S.T.prorroga = true;   // con prórroga, terminar antes no deja bloque: toca descanso
   if(S.T.pausa) S.T.pausado = r + seg;
   else S.T.fin = Date.now() + (r + seg)*1000;
   pararAlarma(); audioVivo();
-  guardar(); latir();
+  guardar(); despierto(true); latir(); bloquear();
 }
 function pausar(){
   if(!S.T) return;
   if(S.T.pausa){ S.T.fin = Date.now() + S.T.pausado*1000; S.T.pausa = false; audioVivo(); }
   else { S.T.pausado = resta(); S.T.pausa = true; pararAlarma(); }
-  guardar(); pintarReloj();
+  guardar(); pintarReloj(); bloquear();
 }
 
 /* pantalla encendida mientras corre un reloj */
@@ -1456,20 +1555,20 @@ function tarjetaVuelta(tarea){
     const x = tareaPorId(id);
     if(x && !x.hecha) volverA(x); else { salida().innerHTML = ""; toast("Esa tarea ya no está en la rueda"); }
   }, ICON.play));
-  b.append(boton("A la ruleta", "", () => { salida().innerHTML = ""; }));
+  b.append(boton("A la ruleta", "", () => { salida().innerHTML = ""; bloquear(); }));
   c.append(b);
-  salida().innerHTML = ""; salida().appendChild(c);
+  salida().innerHTML = ""; salida().appendChild(c); verTarjeta(c); anunciar("¿Sigues con " + tarea.t + "?");
 }
 function tarjetaBloque(){
   if(!S.bloque || !pend().length) return;
-  const c = el("div", "tarjeta entra");
+  const c = el("div", "tarjeta entra bloque-card");
   c.innerHTML = `<div class="rot">Bloque a medio gastar</div>
     <div class="que">Te quedan ${fmtSeg(S.bloque.seg)}</div>
     <div class="det">Sin descanso: gira y la siguiente arranca con lo que queda.</div>`;
   const b = el("div", "btns");
   b.append(boton("Girar", "b-acc", girar));
   c.append(b);
-  salida().innerHTML = ""; salida().appendChild(c);
+  salida().innerHTML = ""; salida().appendChild(c); verTarjeta(c);
 }
 
 function latir(){
@@ -1498,11 +1597,11 @@ function cerrarTanda(tarea, res){
   apuntar(tarea, usados, res);
   if(res === "terminada"){ completar(tarea); celebrar(!pend().length); }
   else tarea.medias = true;
-  if(sobra > 0){
+  if(sobra > 0 && !S.T.prorroga){
     S.bloque = pend().length ? { seg: sobra, desde: Date.now() } : null;
     S.T = null; clearInterval(tic); tic = null; audioParar(); despierto(false);
     firmaReloj = ""; document.title = "Ruleta de tareas";
-    guardar(); salida().innerHTML = ""; pintar(); tarjetaBloque();
+    guardar(); salida().innerHTML = ""; pintar(); tarjetaBloque(); bloquear();
   }else{
     arrancar("descanso", durDescanso(), null, res === "a medias" ? tarea.id : null);
   }
@@ -1519,17 +1618,18 @@ function construirReloj(tarea, vt, fin, s){
     <div class="anillo"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="pista" cx="60" cy="60" r="54"/>`
     + `<circle class="prog" cx="60" cy="60" r="54" style="stroke-dasharray:${CIRC.toFixed(2)}; stroke-dashoffset:${off.toFixed(2)}"/></svg>`
     + `<div class="centro"><div id="reloj"></div><div class="de">${sub}</div></div></div>`
-    + (vt && !fin ? `<div class="det">Luego puedes volver a ${esc(vt.t)}</div>` : "");
-  const b = el("div", "btns");
+    + (vt ? `<div class="det">${fin ? "Te espera" : "Luego puedes volver a"} <b>${esc(vt.t)}</b></div>` : "");
+  const b = el("div", tarea ? "btns cuatro" : "btns");
   if(tarea){
+    // los cuatro botones siempre en el mismo sitio, para que un doble toque no caiga en otro distinto
     b.append(boton("Terminada", "b-ok", () => cerrarActual("terminada"), ICON.check));
     b.append(boton("A medias", "b-med", () => cerrarActual("a medias")));
-    if(fin) b.append(boton("+5 min", "", () => alargar(300)));
-    else b.append(boton(S.T.pausa ? "Seguir" : "Pausa", "", pausar));
+    const pa = boton(S.T.pausa ? "Seguir" : "Pausa", "", pausar); pa.disabled = fin; b.append(pa);
+    b.append(boton("+5 min", "", () => alargar(300)));
   }else{
     if(fin && vt){
       const id = vt.id;
-      b.append(boton("Volver a " + vt.t, "b-acc", () => { const x = tareaPorId(id); if(x && !x.hecha) volverA(x); else parar(); }, ICON.play));
+      b.append(boton("Volver a ella", "b-acc", () => { const x = tareaPorId(id); if(x && !x.hecha) volverA(x); else parar(); }, ICON.play));
     }
     b.append(boton(fin ? (vt ? "A la ruleta" : "Volver a la ruleta") : "Saltar el descanso", fin && !vt ? "b-acc" : "", () => {
       const v = tareaVuelta(); parar(); if(!fin && v) tarjetaVuelta(v);
@@ -1551,8 +1651,9 @@ function pintarReloj(){
     const nueva = !c;
     firmaReloj = firma;
     c = construirReloj(tarea, vt, fin, s);
-    if(nueva) c.classList.add("entra");
     salida().innerHTML = ""; salida().appendChild(c);
+    if(nueva){ c.classList.add("entra"); try{ scrollTo(0, 0); }catch(e){} }
+    anunciar(tarea ? (fin ? "Se acabó la tanda de " + tarea.t : S.T.pausa ? "En pausa" : "En faena: " + tarea.t) : (fin ? "Se acabó el descanso" : "Descanso"));
   }
   const mm = String(Math.floor(s/60)).padStart(2,"0"), ss = String(s%60).padStart(2,"0");
   const rl = c.querySelector("#reloj");
@@ -1577,15 +1678,15 @@ function ponerTipoAlta(t){
   $("alta-ayuda").textContent = t === "fija" ? "Fija: cuando la terminas, vuelve sola a la rueda (cada semana; luego lo puedes cambiar)." : "Suelta: se hace una vez y desaparece de la rueda.";
 }
 function anadir(){
-  const i = $("nueva"), v = i.value.trim();
+  const i = $("nueva"), v = i.value.trim().replace(/;/g, ",");
   if(!v){ i.focus(); return; }
   if(existeNombre(v)){ toast("Ya hay una tarea con ese nombre"); i.select(); return; }
   const x = { id:nuevoId(), t:v, peso:1, hecha:false, medias:false, fija: tipoAlta === "fija", min:0 };
   if(x.fija){ x.cada = CADA_DEF; x.hechaEn = null; }
   S.tareas.push(x); i.value = ""; guardar(); pintar();
-  cerrarAlta(); i.blur();
+  cerrarAlta(); i.blur(); bloquear();
   toast(x.fija ? `«${v}» añadida a las fijas` : `«${v}» añadida a la rueda`);
-  const li = document.querySelector(`.tarea[data-id="${x.id}"]`);
+  const li = document.querySelector(`.tarea[data-id="${sel(x.id)}"]`);
   if(li){ li.classList.add("nueva"); try{ li.scrollIntoView({block:"nearest", behavior: reduceMov() ? "auto" : "smooth"}); }catch(e){} }
 }
 
@@ -1617,7 +1718,7 @@ $("fichero").onchange = e => {
   e.target.value = "";
 };
 $("copia-si").onclick = exportar;
-$("copia-luego").onclick = () => { S.copiaLuego = Date.now() + 7*DIA; guardar(); pintarAvisoCopia(); };
+$("copia-luego").onclick = () => { S.copiaLuego = Date.now() + 7*DIA; guardar(); pintarAvisoCopia(); bloquear(); };
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   comprobarVersion(); revisarVueltas(); pintarListas(); pintarAvisoCopia();
@@ -1629,7 +1730,7 @@ cargar();
 aplicarTema();
 construirLuces();
 pintar();
-if(S.T) latir();
+if(S.T){ latir(); despierto(true); }
 else if(S.bloque) tarjetaBloque();
 $("pista").hidden = !!S.cfg.pistaVista;
 revisarVueltas();
