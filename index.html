@@ -14,341 +14,1028 @@
 <title>Ruleta de tareas</title>
 <style>
   :root{
-    --bg:#f6f5f2; --panel:#fff; --txt:#1b1b1a; --soft:#6f6f69; --line:#e2e0da;
-    --acc:#c2410c; --ok:#3f7d3f; --medias:#b45309; --descanso:#0f766e; --shadow:0 2px 12px rgba(0,0,0,.08);
+    color-scheme:light dark;
+    --bg:#f6f5f2; --panel:#fff; --panel2:#f0eee9; --txt:#1b1b1a; --soft:#6f6f69; --line:#e2e0da;
+    --acc:#c2410c; --acc-btn:#c2410c; --acc-suave:rgba(194,65,12,.1);
+    --ok:#3f7d3f; --ok-btn:#3f7d3f; --medias:#b45309; --descanso:#0f766e; --peligro:#b42318;
+    --aro:#26262b; --luz:#ffd27a; --brillo-fondo:rgba(234,88,12,.10);
+    --toast:#26262b; --toast-txt:#f3f1ec; --toast-acc:#ffb27a;
+    --shadow:0 2px 12px rgba(0,0,0,.07); --shadow2:0 18px 50px rgba(0,0,0,.22);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#17171a; --panel:#212126; --txt:#eceae6; --soft:#9c9a95; --line:#34343b;
-      --acc:#f97316; --ok:#7bb77b; --medias:#fbbf24; --descanso:#5eead4; --shadow:0 2px 12px rgba(0,0,0,.45);
+      --bg:#17171a; --panel:#212126; --panel2:#2a2a30; --txt:#eceae6; --soft:#9c9a95; --line:#34343b;
+      --acc:#f97316; --acc-btn:#ea580c; --acc-suave:rgba(249,115,22,.14);
+      --ok:#7bb77b; --ok-btn:#3f8f46; --medias:#fbbf24; --descanso:#5eead4; --peligro:#f87171;
+      --aro:#0c0c0e; --luz:#ffcf70; --brillo-fondo:rgba(249,115,22,.11);
+      --toast:#3a3a42; --toast-txt:#f3f1ec; --toast-acc:#fdba74;
+      --shadow:0 2px 12px rgba(0,0,0,.45); --shadow2:0 18px 50px rgba(0,0,0,.6);
     }
   }
   :root[data-theme="dark"]{
-    --bg:#17171a; --panel:#212126; --txt:#eceae6; --soft:#9c9a95; --line:#34343b;
-    --acc:#f97316; --ok:#7bb77b; --medias:#fbbf24; --descanso:#5eead4; --shadow:0 2px 12px rgba(0,0,0,.45);
+    color-scheme:dark;
+    --bg:#17171a; --panel:#212126; --panel2:#2a2a30; --txt:#eceae6; --soft:#9c9a95; --line:#34343b;
+    --acc:#f97316; --acc-btn:#ea580c; --acc-suave:rgba(249,115,22,.14);
+    --ok:#7bb77b; --ok-btn:#3f8f46; --medias:#fbbf24; --descanso:#5eead4; --peligro:#f87171;
+    --aro:#0c0c0e; --luz:#ffcf70; --brillo-fondo:rgba(249,115,22,.11);
+    --toast:#3a3a42; --toast-txt:#f3f1ec; --toast-acc:#fdba74;
+    --shadow:0 2px 12px rgba(0,0,0,.45); --shadow2:0 18px 50px rgba(0,0,0,.6);
   }
+  :root[data-theme="light"]{color-scheme:light}
+
   *{box-sizing:border-box}
-  body{margin:0; background:var(--bg); color:var(--txt);
-    padding:calc(14px + env(safe-area-inset-top)) 14px calc(44px + env(safe-area-inset-bottom));
-    max-width:560px; margin-inline:auto; -webkit-tap-highlight-color:transparent;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif}
-  h1{font-size:1.25rem; margin:0; letter-spacing:-.01em}
+  [hidden]{display:none !important}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0 auto; max-width:560px; min-height:100vh; color:var(--txt); line-height:1.35;
+    background:radial-gradient(900px 420px at 50% -170px, var(--brillo-fondo), transparent 70%) no-repeat, var(--bg);
+    padding:calc(14px + env(safe-area-inset-top)) 16px calc(100px + env(safe-area-inset-bottom));
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-tap-highlight-color:transparent}
+  /* franja oscura bajo la barra de estado del iPhone: la hora va en blanco, también con el tema claro */
+  body::before{content:""; position:fixed; top:0; left:0; right:0; height:env(safe-area-inset-top);
+    background:#17171a; z-index:90; pointer-events:none}
+  body.con-hoja{overflow:hidden}
+  h1{font-size:1.32rem; margin:0; letter-spacing:-.02em; font-weight:800}
   .ver{font-size:.7rem; color:var(--soft); letter-spacing:.04em; margin-top:1px}
-  #nueva-version{display:none; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;
-    background:var(--panel); border:1px solid var(--acc); border-radius:12px; padding:10px 12px; font-size:.9rem}
-  #nueva-version.on{display:flex}
-  h2{font-size:.78rem; text-transform:uppercase; letter-spacing:.07em; color:var(--soft);
-     margin:24px 0 8px; font-weight:600}
-  button{font:inherit; color:var(--txt); background:var(--panel); border:1px solid var(--line);
-    border-radius:10px; padding:9px 13px; cursor:pointer}
-  button:active{transform:translateY(1px)}
-  input{font:inherit; color:var(--txt); background:var(--panel); border:1px solid var(--line);
-    border-radius:10px; padding:10px 11px; min-width:0}
+  h2{font-size:.76rem; text-transform:uppercase; letter-spacing:.08em; color:var(--soft); margin:0; font-weight:700;
+    display:flex; align-items:center; gap:7px}
+  h2 .num{min-width:22px; padding:2px 7px; border-radius:20px; background:var(--panel2); font-size:.72rem;
+    letter-spacing:0; text-align:center}
+  button{font:inherit; color:var(--txt); background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:10px 14px; cursor:pointer; touch-action:manipulation;
+    transition:transform .12s ease, background-color .2s, border-color .2s, color .2s, opacity .2s, box-shadow .2s}
+  button:active:not(:disabled){transform:scale(.96)}
+  button:disabled{opacity:.45; cursor:default}
+  :focus-visible{outline:2px solid var(--acc); outline-offset:2px}
+  input{font:inherit; color:var(--txt); background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:11px 12px; min-width:0; transition:border-color .2s, box-shadow .2s}
+  input:focus{outline:none; border-color:var(--acc); box-shadow:0 0 0 3px var(--acc-suave)}
+  svg{display:block}
 
+  /* ---------- cabecera ---------- */
   .cab{display:flex; align-items:center; justify-content:space-between; gap:10px}
-  #mas{width:40px; height:40px; padding:0; font-size:1.5rem; line-height:1; border-radius:50%;
-    background:var(--acc); color:#fff; border:none; flex:none}
-  .alta{display:none; gap:8px; margin-top:10px}
-  .alta.abierta{display:flex}
-  .alta input{flex:1}
-  .tabs{display:flex; gap:6px; margin:14px 0 16px; background:var(--panel); border:1px solid var(--line);
-    border-radius:12px; padding:4px}
-  .tabs button{flex:1; border:none; background:none; color:var(--soft); font-weight:600; padding:9px}
-  .tabs button.on{background:var(--bg); color:var(--txt)}
+  .cab-btns{display:flex; gap:8px}
+  .redondo{width:42px; height:42px; padding:0; border-radius:50%; display:grid; place-items:center; flex:none}
+  .redondo svg{width:21px; height:21px}
+  #ajustes{color:var(--soft)}
+  #mas{background:var(--acc-btn); color:#fff; border:none; box-shadow:0 4px 14px rgba(194,65,12,.35)}
+  #mas svg{transition:transform .35s cubic-bezier(.3,.7,.2,1.3)}
+  #mas.abierto svg{transform:rotate(135deg)}
+  .hoy{color:var(--soft); font-size:.86rem; margin-top:8px}
+  .hoy b{color:var(--txt); font-weight:650}
+  #nueva-version{display:none; align-items:center; justify-content:space-between; gap:10px; margin-top:12px;
+    background:var(--panel); border:1px solid var(--acc); border-radius:14px; padding:10px 12px; font-size:.9rem}
+  #nueva-version.on{display:flex; animation:aparece .4s ease}
+  .aviso{margin-top:12px; background:var(--panel); border:1px solid var(--line); border-left:4px solid var(--medias);
+    border-radius:14px; padding:12px 14px; font-size:.9rem; animation:aparece .4s ease}
+  .aviso b{display:block}
+  .aviso span{display:block; color:var(--soft); margin-top:2px}
+  .aviso .btns{justify-content:flex-start; margin-top:10px}
+
+  /* ---------- añadir ---------- */
+  .plegable{display:grid; grid-template-rows:0fr; opacity:0; visibility:hidden;
+    transition:grid-template-rows .32s cubic-bezier(.3,.7,.2,1), opacity .25s, visibility 0s .32s}
+  .plegable.abierta{grid-template-rows:1fr; opacity:1; visibility:visible;
+    transition:grid-template-rows .32s cubic-bezier(.3,.7,.2,1), opacity .25s, visibility 0s}
+  .plegable > div{overflow:hidden; min-height:0}
+  .alta-in{display:flex; flex-direction:column; gap:8px; padding-top:12px}
+  .alta-fila{display:flex; gap:8px}
+  .alta-fila .seg{flex:1}
+  .ayuda{font-size:.78rem; color:var(--soft); margin-top:6px}
+  .alta-in .ayuda{margin-top:0; padding-left:2px}
+  .seg{display:flex; gap:3px; padding:3px; background:var(--panel2); border:1px solid var(--line); border-radius:12px}
+  .seg button{flex:1; border:none; background:none; padding:8px 10px; border-radius:9px; color:var(--soft);
+    font-weight:600; font-size:.9rem}
+  .seg button.on{background:var(--panel); color:var(--txt); box-shadow:0 1px 3px rgba(0,0,0,.14)}
+
+  /* ---------- pestañas ---------- */
+  .tabs{position:relative; display:flex; margin:16px 0 18px; padding:4px; background:var(--panel);
+    border:1px solid var(--line); border-radius:14px}
+  .tabs button{position:relative; z-index:1; flex:1; border:none; background:none; padding:9px; color:var(--soft); font-weight:650}
+  .tabs button.on{color:var(--txt)}
+  .tab-ind{position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); border-radius:10px;
+    background:var(--bg); box-shadow:0 1px 3px rgba(0,0,0,.08); transition:transform .38s cubic-bezier(.3,.7,.2,1)}
+  .tabs[data-on="registro"] .tab-ind{transform:translateX(100%)}
   .vista{display:none}
-  .vista.on{display:block}
+  .vista.on{display:block; animation:aparece .35s ease}
+  @keyframes aparece{from{opacity:0; transform:translateY(8px)}}
 
-  .wheelbox{position:relative; width:100%; max-width:340px; margin:0 auto}
-  svg{width:100%; height:auto; display:block}
-  #aguja{position:absolute; top:-2px; left:50%; transform:translateX(-50%); z-index:2;
-    width:0; height:0; border-left:11px solid transparent; border-right:11px solid transparent;
-    border-top:20px solid var(--acc); filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
-  #giro{transition:transform 4.6s cubic-bezier(.16,.72,.14,1); transform-origin:150px 150px}
-  .vacio{display:flex; align-items:center; justify-content:center; text-align:center;
-    min-height:210px; color:var(--soft); padding:24px; border:1px dashed var(--line); border-radius:16px}
-  #girar{display:block; width:100%; max-width:340px; margin:16px auto 0; background:var(--acc);
-    color:#fff; border:none; padding:16px; font-size:1.05rem; font-weight:600; border-radius:12px}
-  #girar:disabled{opacity:.4}
+  /* ---------- rueda ---------- */
+  .wheelbox{position:relative; width:100%; max-width:350px; aspect-ratio:1; margin:6px auto 0; cursor:pointer;
+    border-radius:50%; outline-offset:6px}
+  .wheelbox.bloqueada{cursor:default}
+  .wheelbox::before{content:""; position:absolute; inset:5%; border-radius:50%; box-shadow:0 16px 36px rgba(0,0,0,.28)}
+  #disco, .sobre{position:absolute; inset:0; width:100%; height:100%}
+  .disco-wrap{position:absolute; inset:0; border-radius:50%; overflow:hidden}
+  #disco{will-change:transform}
+  #disco path, #disco text{transition:opacity .45s ease}
+  #disco.premio path:not(.gana), #disco.premio text:not(.gana){opacity:.28}
+  #disco path.gana{stroke:#fff; stroke-width:2.5}
+  .aro{fill:none; stroke:var(--aro); stroke-width:12}
+  .buje{fill:var(--panel); stroke:var(--line); stroke-width:1.5}
+  .buje-c{fill:var(--acc-btn)}
+  .luz{fill:var(--luz); opacity:.9}
+  .sobre.girando .luz{animation:parpadeo .36s steps(1) infinite}
+  .sobre.girando .luz:nth-child(even){animation-delay:-.18s}
+  .sobre.premio .luz{animation:parpadeo .2s steps(1) 8}
+  .sobre.premio .luz:nth-child(even){animation-delay:-.1s}
+  @keyframes parpadeo{50%{opacity:.18}}
+  #aguja{position:absolute; top:-7px; left:50%; width:32px; height:42px; margin-left:-16px; z-index:3;
+    transform-origin:50% 33%; filter:drop-shadow(0 2px 3px rgba(0,0,0,.35)); pointer-events:none}
+  #aguja svg{width:100%; height:100%}
+  .aguja-p{fill:var(--acc-btn); stroke:#fff; stroke-width:2.4; stroke-linejoin:round}
+  .vacio{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center;
+    min-height:250px; padding:28px 22px; color:var(--soft); background:var(--panel); border:1px dashed var(--line);
+    border-radius:22px; animation:aparece .4s ease}
+  .vacio svg{width:64px; height:64px; color:var(--ok); animation:pop .6s cubic-bezier(.2,.9,.3,1.4)}
+  @keyframes pop{from{transform:scale(.3); opacity:0}}
+  .vacio b{color:var(--txt); font-size:1.15rem}
+  .vacio button{margin-top:10px; font-weight:650}
+  #girar{display:block; width:100%; max-width:350px; margin:20px auto 0; padding:16px; border:none; border-radius:16px;
+    background:var(--acc-btn); color:#fff; font-size:1.08rem; font-weight:700; letter-spacing:.01em;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 8px 20px rgba(194,65,12,.3)}
+  #girar:disabled{opacity:.55; box-shadow:none}
 
-  .tarjeta{max-width:340px; margin:14px auto 0; background:var(--panel); border:1px solid var(--line);
-    border-radius:14px; padding:16px; text-align:center; box-shadow:var(--shadow)}
-  .tarjeta .rot{font-size:.75rem; text-transform:uppercase; letter-spacing:.07em; color:var(--soft)}
-  .tarjeta .que{font-size:1.25rem; font-weight:700; margin:2px 0 4px}
-  .tarjeta .det{color:var(--soft); font-size:.85rem}
-  .btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:12px}
-  .btns button{flex:1; min-width:100px}
-  .b-ok{color:#fff !important; background:var(--ok); border-color:var(--ok)}
-  .b-acc{color:#fff !important; background:var(--acc); border-color:var(--acc)}
+  /* ---------- tarjetas ---------- */
+  .tarjeta{max-width:350px; margin:16px auto 0; padding:18px 16px 16px; text-align:center; background:var(--panel);
+    border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow)}
+  .tarjeta.entra{animation:entra .45s cubic-bezier(.2,.8,.25,1.15)}
+  @keyframes entra{from{opacity:0; transform:translateY(16px) scale(.96)}}
+  .tarjeta .rot{font-size:.74rem; text-transform:uppercase; letter-spacing:.09em; color:var(--soft); font-weight:700}
+  .tarjeta .que{font-size:1.4rem; font-weight:800; margin:4px 0; letter-spacing:-.015em;
+    display:flex; align-items:center; justify-content:center; gap:9px; overflow-wrap:anywhere}
+  .tarjeta .que .punto{width:14px; height:14px}
+  .tarjeta .det{color:var(--soft); font-size:.86rem}
+  .btns{display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:14px}
+  .btns button{flex:1 1 auto; min-width:min(100%, 90px); max-width:100%; padding:11px 12px; font-weight:650; white-space:nowrap;
+    display:inline-flex; align-items:center; justify-content:center; gap:6px}
+  .btns button span{overflow:hidden; text-overflow:ellipsis}
+  .btns button svg{width:16px; height:16px; flex:none}
+  .b-ok{color:#fff !important; background:var(--ok-btn); border-color:var(--ok-btn)}
+  .b-acc{color:#fff !important; background:var(--acc-btn); border-color:var(--acc-btn)}
   .b-med{background:none; border-color:var(--medias); color:var(--medias) !important}
+  .b-peligro{background:none !important; border-color:var(--peligro) !important; color:var(--peligro) !important}
   .desc-card{border-color:var(--descanso)}
   .desc-card .que{color:var(--descanso)}
-  #reloj{font-variant-numeric:tabular-nums; font-size:3.4rem; font-weight:700; line-height:1.05;
-    letter-spacing:-.02em; margin:8px 0 2px}
+
+  /* reloj con anillo */
+  .anillo{position:relative; width:200px; height:200px; margin:10px auto 2px}
+  .anillo svg{width:100%; height:100%; transform:rotate(-90deg)}
+  .anillo circle{fill:none; stroke-width:9}
+  .anillo .pista{stroke:var(--line)}
+  .anillo .prog{stroke:var(--acc); stroke-linecap:round; transition:stroke-dashoffset .45s linear, stroke .3s, opacity .3s}
+  .desc-card .anillo .prog{stroke:var(--descanso)}
+  .anillo.poco .prog{animation:respira 1s ease-in-out infinite}
+  .anillo.fin .prog{stroke:var(--ok)}
+  .anillo.fin{animation:late 1.1s ease-in-out infinite}
+  .anillo.pausa .prog{opacity:.4}
+  @keyframes late{50%{transform:scale(1.04)}}
+  @keyframes respira{50%{opacity:.45}}
+  .anillo .centro{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center}
+  #reloj{font-variant-numeric:tabular-nums; font-size:3.1rem; font-weight:800; line-height:1; letter-spacing:-.03em}
   #reloj.poco{color:var(--acc)}
   #reloj.fin{color:var(--ok)}
+  .anillo .de{font-size:.8rem; color:var(--soft); margin-top:6px}
 
+  /* ---------- listas ---------- */
+  .sec{display:flex; align-items:center; justify-content:space-between; gap:10px; margin:28px 0 10px}
+  .enlace{border:none; background:none; color:var(--acc); font-weight:650; font-size:.85rem; padding:4px 2px}
   ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px}
-  li{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px}
-  li.hecha .nom{text-decoration:line-through; color:var(--soft)}
-  .fila1{display:flex; align-items:center; gap:8px}
-  .punto{width:11px; height:11px; border-radius:50%; flex:none}
-  .nom{flex:1; border:none; background:none; padding:6px 2px; font-weight:600}
-  .nom:focus{outline:none; border-bottom:1px solid var(--line)}
-  .fila2{display:flex; align-items:center; gap:8px; margin-top:8px; flex-wrap:wrap}
-  .grupo{display:flex; align-items:center; gap:2px; border:1px solid var(--line); border-radius:9px;
-    padding:2px; background:var(--bg)}
-  .grupo button{border:none; background:none; padding:6px 12px; color:var(--soft); font-size:1rem; line-height:1}
-  .grupo .val{font-size:.8rem; min-width:56px; text-align:center; color:var(--soft)}
-  .etq{font-size:.75rem; padding:5px 10px; border-radius:20px; border:1px solid var(--line);
-    background:none; color:var(--soft)}
-  .etq.on{border-color:var(--medias); color:var(--medias); font-weight:600}
-  .mini{border:none; background:none; color:var(--soft); padding:6px 8px; font-size:.82rem}
-  .mini.x{font-size:1.15rem; line-height:1}
+  .tarea{display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line);
+    border-radius:16px; padding:4px 8px 4px 4px; transition:opacity .23s ease, transform .23s ease}
+  .tarea.sale{opacity:0; transform:translateX(36px)}
+  .tarea.nueva{animation:destella 1.4s ease}
+  @keyframes destella{0%,30%{background:var(--acc-suave); border-color:var(--acc)}}
+  .tarea .cuerpo{flex:1; min-width:0; display:flex; align-items:center; gap:11px; border:none; background:none;
+    text-align:left; padding:10px 8px; border-radius:12px}
+  .tarea .cuerpo:active{transform:none; background:var(--panel2)}
+  .punto{width:12px; height:12px; border-radius:50%; flex:none; box-shadow:inset 0 0 0 2px rgba(255,255,255,.22)}
+  .tarea .txt{display:flex; flex-direction:column; min-width:0}
+  .tarea .nom{font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .tarea .meta{font-size:.76rem; color:var(--soft); margin-top:2px; display:flex; flex-wrap:wrap; align-items:center; gap:4px 6px}
+  .chip{display:inline-block; font-size:.68rem; padding:1px 7px; border-radius:10px; border:1px solid currentColor;
+    font-weight:700; letter-spacing:.02em}
+  .chip.medias{color:var(--medias)}
+  .chip.faena{color:var(--acc); animation:respira 1.6s ease-in-out infinite}
+  .tarea .accion{flex:none; display:inline-flex; align-items:center; gap:5px; padding:8px 12px; border-radius:20px;
+    font-size:.84rem; font-weight:650; color:var(--ok)}
+  .tarea .accion svg{width:15px; height:15px}
+  .hechas .tarea{background:transparent}
+  .hechas .tarea .nom{text-decoration:line-through; color:var(--soft)}
+  .hechas .tarea .accion{color:var(--soft)}
   .pie{margin-top:14px; color:var(--soft); font-size:.85rem}
 
-  .tot{display:flex; flex-direction:column; gap:6px}
-  .tot .f{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px}
+  /* ---------- aviso flotante (con deshacer) ---------- */
+  #toast{position:fixed; left:50%; bottom:calc(18px + env(safe-area-inset-bottom)); z-index:60;
+    transform:translate(-50%, calc(100% + 40px)); display:flex; align-items:center; gap:10px;
+    width:max-content; max-width:calc(100% - 28px); padding:11px 10px 11px 16px; overflow:hidden;
+    background:var(--toast); color:var(--toast-txt); border-radius:14px; box-shadow:var(--shadow2); font-size:.92rem;
+    visibility:hidden; transition:transform .38s cubic-bezier(.2,.8,.2,1), visibility 0s .38s}
+  #toast.on{transform:translate(-50%, 0); visibility:visible; transition:transform .38s cubic-bezier(.2,.8,.2,1), visibility 0s}
+  #toast-txt{padding:2px 0}
+  #toast button{flex:none; background:none; border:none; color:var(--toast-acc); font-weight:700; padding:6px 8px}
+  #toast i{position:absolute; left:0; bottom:0; width:100%; height:3px; background:var(--toast-acc); opacity:.7;
+    transform-origin:left; transform:scaleX(0)}
+  #toast i.corre{animation:mengua var(--dur, 6s) linear forwards}
+  @keyframes mengua{from{transform:scaleX(1)} to{transform:scaleX(0)}}
+
+  /* ---------- hoja de abajo (editar tarea, ajustes) ---------- */
+  .velo{position:fixed; inset:0; z-index:40; background:rgba(0,0,0,.45); opacity:0; pointer-events:none; transition:opacity .3s}
+  .velo.on{opacity:1; pointer-events:auto}
+  .hoja{position:fixed; left:0; right:0; bottom:0; z-index:50; max-width:560px; max-height:88vh; margin:0 auto;
+    overflow:auto; overscroll-behavior:contain; background:var(--panel); border-radius:24px 24px 0 0;
+    padding:8px 18px calc(22px + env(safe-area-inset-bottom)); box-shadow:var(--shadow2);
+    transform:translateY(105%); visibility:hidden;
+    transition:transform .4s cubic-bezier(.2,.8,.2,1), visibility 0s .4s}
+  .hoja.on{transform:translateY(0); visibility:visible; transition:transform .4s cubic-bezier(.2,.8,.2,1), visibility 0s}
+  .asa{width:42px; height:5px; border-radius:3px; background:var(--line); margin:4px auto 12px}
+  .hoja h3{margin:0 0 16px; font-size:1.15rem; letter-spacing:-.01em}
+  .campo{margin-bottom:18px}
+  .campo .lab{font-size:.74rem; text-transform:uppercase; letter-spacing:.08em; color:var(--soft); font-weight:700; margin-bottom:8px}
+  .campo input[type=text]{width:100%}
+  .chips{display:flex; flex-wrap:wrap; gap:6px}
+  .chips button{padding:7px 12px; border-radius:20px; font-size:.86rem; color:var(--soft)}
+  .chips button.on{border-color:var(--acc); color:var(--acc); background:var(--acc-suave); font-weight:700}
+  .stepper{display:inline-flex; align-items:center; gap:2px; padding:3px; background:var(--panel2);
+    border:1px solid var(--line); border-radius:12px}
+  .stepper button{width:42px; height:38px; padding:0; border:none; background:none; font-size:1.25rem; line-height:1}
+  .stepper .val{min-width:150px; text-align:center; font-weight:650; font-size:.92rem}
+  .fila-ajuste{display:flex; align-items:center; justify-content:space-between; gap:14px}
+  .fila-ajuste .lab{margin-bottom:0}
+  .fila-ajuste .ayuda{margin-top:3px}
+  .interruptor{position:relative; flex:none; width:52px; height:31px; padding:0; border:none; border-radius:16px;
+    background:var(--line); transition:background-color .25s}
+  .interruptor::after{content:""; position:absolute; top:3px; left:3px; width:25px; height:25px; border-radius:50%;
+    background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.3); transition:transform .25s cubic-bezier(.3,.7,.2,1.2)}
+  .interruptor.on{background:var(--ok-btn)}
+  .interruptor.on::after{transform:translateX(21px)}
+  .interruptor:active:not(:disabled){transform:none}
+  .fila-btn{display:flex; gap:8px; flex-wrap:wrap}
+  .fila-btn button{flex:1; min-width:130px; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:600}
+  .fila-btn button svg{width:16px; height:16px}
+  .listo{width:100%; margin-top:20px; padding:13px; font-weight:700}
+
+  /* ---------- registro ---------- */
+  .tot{display:flex; flex-direction:column; gap:8px}
+  .tot .f{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:11px 13px}
   .tot .cab2{display:flex; align-items:baseline; gap:8px; cursor:pointer}
-  .tot .cab2 .n{flex:1; font-weight:600}
-  .tot .cab2 .m{font-variant-numeric:tabular-nums; font-weight:700}
+  .tot .cab2 .n{flex:1; font-weight:650; min-width:0; overflow-wrap:anywhere}
+  .tot .cab2 .m{font-variant-numeric:tabular-nums; font-weight:750}
+  .tot .cab2 .flecha{color:var(--soft); font-size:.8rem; transition:transform .25s}
+  .tot .f.abierto .cab2 .flecha{transform:rotate(180deg)}
   .tot .sub{color:var(--soft); font-size:.8rem; margin-top:2px}
-  .tot .det2{display:none; margin-top:8px; border-top:1px solid var(--line); padding-top:8px;
-    font-size:.85rem; color:var(--soft)}
-  .tot .f.abierto .det2{display:block}
-  .tot .det2 div{display:flex; justify-content:space-between; padding:2px 0}
-  .barra{height:4px; border-radius:2px; background:var(--line); margin-top:8px; overflow:hidden}
-  .barra i{display:block; height:100%; background:var(--acc)}
-  .mesbox{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px}
-  .mesbox .g{font-size:1.6rem; font-weight:700; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
+  .tot .det2{display:none; margin-top:10px; border-top:1px solid var(--line); padding-top:8px; font-size:.85rem; color:var(--soft)}
+  .tot .f.abierto .det2{display:block; animation:aparece .3s ease}
+  .linea{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:3px 0}
+  .linea .dcha{margin-left:auto; text-align:right}
+  .linea .x{flex:none; border:none; background:none; color:var(--soft); padding:2px 6px; font-size:1.05rem; line-height:1}
+  .barra{height:4px; border-radius:2px; background:var(--line); margin-top:9px; overflow:hidden}
+  .barra i{display:block; height:100%; background:var(--acc); border-radius:2px; transform-origin:left}
+  .mesbox{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:8px}
+  .mesbox .g{font-size:1.8rem; font-weight:800; letter-spacing:-.02em; font-variant-numeric:tabular-nums}
   .mesbox .g small{font-size:.85rem; font-weight:500; color:var(--soft); margin-left:6px}
   .mesbox .d{font-size:.85rem; color:var(--soft); margin-top:2px}
   .mesbox .d b{color:var(--txt)}
   .barras{display:flex; align-items:flex-end; gap:3px; height:64px; margin-top:8px}
   .barras .col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; cursor:pointer}
-  .barras .b{width:100%; border-radius:3px 3px 0 0; background:var(--acc); opacity:.45; min-height:2px}
+  .barras .b{width:100%; border-radius:3px 3px 0 0; background:var(--acc); opacity:.45; min-height:2px; transform-origin:bottom}
   .barras .col.act .b{opacity:1}
   .barras .col.cero .b{background:var(--line); opacity:1}
   .barras .l{font-size:8px; color:var(--soft); margin-top:3px; text-transform:uppercase; letter-spacing:.02em}
   .capt{font-size:.8rem; color:var(--soft); margin-top:6px; min-height:1.1em}
-  .mapa{display:grid; grid-template-columns:54px repeat(12, 1fr); gap:3px; align-items:center;
-    background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px}
+  .mapa{display:grid; grid-template-columns:58px repeat(12, 1fr); gap:3px; align-items:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:10px}
   .mapa .h{font-size:8px; color:var(--soft); text-align:center; text-transform:uppercase}
   .mapa .r{font-size:.72rem; color:var(--soft); overflow:hidden; white-space:nowrap; text-overflow:ellipsis; padding-right:4px}
   .mapa .c{aspect-ratio:1; border-radius:3px; background:var(--acc); cursor:pointer}
   .mapa .c.cero{background:var(--line); opacity:.55}
   .mapa .c.sel{outline:2px solid var(--txt); outline-offset:1px}
-  .curio{display:flex; flex-direction:column; gap:6px}
-  .curio div{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:.9rem}
-  .curio div span{display:block; font-size:.75rem; text-transform:uppercase; letter-spacing:.06em; color:var(--soft); margin-bottom:2px}
-  .acciones{display:flex; gap:8px; margin-top:16px}
-  .acciones button{flex:1}
+  .curio{display:flex; flex-direction:column; gap:8px}
+  .curio div{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:11px 13px; font-size:.9rem}
+  .curio div span{display:block; font-size:.74rem; text-transform:uppercase; letter-spacing:.07em; color:var(--soft); margin-bottom:2px}
+  .acciones{display:flex; gap:8px}
+  .acciones button{flex:1; font-weight:600}
+  /* al entrar en Registro, las barras crecen */
+  .anim .barra i{animation:ancho .8s cubic-bezier(.2,.8,.2,1) both}
+  .anim .barras .b{animation:crece .7s cubic-bezier(.2,.8,.2,1) both}
+  .anim .mesbox .g{animation:aparece .5s ease both}
+  @keyframes ancho{from{transform:scaleX(0)}}
+  @keyframes crece{from{transform:scaleY(0)}}
+
+  /* confeti */
+  .confeti{position:fixed; inset:0; z-index:70; pointer-events:none; overflow:hidden}
+  .confeti i{position:absolute; width:8px; height:12px; margin:-6px 0 0 -4px; border-radius:2px}
+
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{animation-duration:.01ms !important; animation-iteration-count:1 !important;
+      transition-duration:.01ms !important; transition-delay:0s !important}
+  }
 </style>
 </head>
 <body>
 
-<div class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v1.5</div></div>
-  <button id="mas" title="Añadir una suelta">+</button>
-</div>
+<header class="cab">
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.0</div></div>
+  <div class="cab-btns">
+    <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
+    <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+  </div>
+</header>
+<div class="hoy" id="hoy"></div>
 <div id="nueva-version"><span>Hay una versión nueva de la app.</span><button class="b-acc" id="recargar">Actualizar</button></div>
-<div class="alta" id="alta">
-  <input id="nueva" type="text" placeholder="Qué hay que hacer" autocomplete="off">
-  <button id="add" class="b-acc">Añadir</button>
+<div class="aviso" id="aviso-copia" hidden>
+  <b>Guarda una copia de tu registro</b><span id="aviso-copia-txt"></span>
+  <div class="btns"><button class="b-acc" id="copia-si">Guardar copia</button><button id="copia-luego">Luego</button></div>
 </div>
+<div class="plegable" id="alta"><div><div class="alta-in">
+  <input id="nueva" type="text" placeholder="¿Qué hay que hacer?" autocomplete="off" maxlength="60" enterkeyhint="done">
+  <div class="alta-fila">
+    <div class="seg" id="alta-tipo" role="group" aria-label="Tipo de tarea">
+      <button data-tipo="suelta" class="on" aria-pressed="true">Suelta</button>
+      <button data-tipo="fija" aria-pressed="false">Fija</button>
+    </div>
+    <button id="add" class="b-acc">Añadir</button>
+  </div>
+  <div class="ayuda" id="alta-ayuda">Suelta: se hace una vez y desaparece de la rueda.</div>
+</div></div></div>
 
-<div class="tabs">
+<nav class="tabs" id="tabs" data-on="ruleta">
+  <span class="tab-ind"></span>
   <button data-v="ruleta" class="on">Ruleta</button>
   <button data-v="registro">Registro</button>
-</div>
+</nav>
 
 <section class="vista on" id="v-ruleta">
-  <div class="wheelbox" id="caja">
-    <div id="aguja"></div>
-    <svg id="rueda" viewBox="0 0 300 300" aria-hidden="true">
-      <g id="giro"></g>
-      <circle cx="150" cy="150" r="20" fill="var(--panel)" stroke="var(--line)" stroke-width="2"></circle>
+  <div class="wheelbox" id="caja" role="button" tabindex="0" aria-label="Girar la ruleta">
+    <div class="disco-wrap"><svg id="disco" viewBox="0 0 300 300" aria-hidden="true"><g id="giro"></g></svg></div>
+    <svg id="sobre" class="sobre" viewBox="0 0 300 300" aria-hidden="true">
+      <defs>
+        <radialGradient id="brillo" cx="50%" cy="28%" r="70%">
+          <stop offset="0" stop-color="#fff" stop-opacity=".26"/>
+          <stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="sombra" cx="50%" cy="50%" r="50%">
+          <stop offset=".8" stop-color="#000" stop-opacity="0"/>
+          <stop offset="1" stop-color="#000" stop-opacity=".24"/>
+        </radialGradient>
+      </defs>
+      <circle cx="150" cy="150" r="138" fill="url(#sombra)"/>
+      <circle cx="150" cy="150" r="138" fill="url(#brillo)"/>
+      <circle cx="150" cy="150" r="144" class="aro"/>
+      <g id="luces"></g>
+      <circle cx="150" cy="152.5" r="23" fill="rgba(0,0,0,.2)"/>
+      <circle cx="150" cy="150" r="22" class="buje"/>
+      <circle cx="150" cy="150" r="7" class="buje-c"/>
     </svg>
+    <div id="aguja"><svg viewBox="0 0 32 42" aria-hidden="true"><path class="aguja-p" d="M16 40 C13 31 5 24 5 14 A11 11 0 0 1 27 14 C27 24 19 31 16 40Z"/><circle cx="16" cy="14" r="4.2" fill="#fff"/></svg></div>
   </div>
+  <div class="vacio" id="vacio" hidden></div>
   <button id="girar">Girar</button>
-  <div id="salida"></div>
+  <div id="salida" aria-live="polite"></div>
 
-  <h2>En la rueda</h2>
+  <div class="sec" id="sec-rueda"><h2>En la rueda <span class="num" id="num-rueda">0</span></h2></div>
   <ul id="lista"></ul>
   <div id="bloque-hechas" hidden>
-    <h2>Hechas</h2>
-    <ul id="hechas"></ul>
+    <div class="sec"><h2>Hechas <span class="num" id="num-hechas">0</span></h2><button class="enlace" id="devolver-todas">Devolver todas</button></div>
+    <ul id="hechas" class="hechas"></ul>
   </div>
-  <div class="pie" id="cuenta"></div>
+  <p class="pie" id="pista" hidden>Toca una tarea para cambiarle el nombre, cada cuánto vuelve, el peso o el tiempo.</p>
 </section>
 
 <section class="vista" id="v-registro">
   <div class="mesbox" id="mesbox"></div>
-  <h2>Fijas, por tiempo dedicado</h2>
+  <div class="sec"><h2>Fijas, por tiempo dedicado</h2></div>
   <div class="tot" id="tot-fijas"></div>
-  <h2>Sueltas</h2>
+  <div class="sec"><h2>Sueltas</h2></div>
   <div class="tot" id="tot-sueltas"></div>
   <div id="bloque-mapa" hidden>
-    <h2>El año, de un vistazo</h2>
+    <div class="sec"><h2>El año, de un vistazo</h2></div>
     <div class="mapa" id="mapa"></div>
     <div class="capt" id="mapa-capt">Toca una casilla.</div>
   </div>
   <div id="bloque-curio" hidden>
-    <h2>Curiosidades</h2>
+    <div class="sec"><h2>Curiosidades</h2></div>
     <div class="curio" id="curio"></div>
   </div>
+  <div class="sec"><h2>Copia de seguridad</h2></div>
   <div class="acciones">
-    <button id="exportar">Exportar CSV</button>
-    <button id="importar">Importar CSV</button>
-    <input id="fichero" type="file" accept=".csv,text/csv" hidden>
+    <button id="exportar">Guardar copia</button>
+    <button id="importar">Recuperar copia</button>
   </div>
+  <div class="pie" id="copia-info"></div>
+  <input id="fichero" type="file" accept=".csv,text/csv" hidden>
   <div class="pie" id="resumen"></div>
 </section>
 
+<div class="velo" id="velo"></div>
+<div class="hoja" id="hoja" role="dialog" aria-modal="true" aria-labelledby="hoja-tit" aria-hidden="true">
+  <div class="asa"></div>
+  <div id="hoja-cont"></div>
+</div>
+<div id="toast" role="status" aria-live="polite"><span id="toast-txt"></span><button id="toast-btn" hidden>Deshacer</button><i id="toast-barra"></i></div>
+
 <script>
+/* ---------- datos ---------- */
 const CLAVE = "ruleta-casa-v5";
-const TANDA = 15*60, DESCANSO = 15*60;
+const DIA = 86400000;
+// las fijas con las que arranca la app; desde la v2 se pueden cambiar desde la propia app
 const FIJAS = [
   ["Limpiar salón",1],["Limpiar baño",1],["Limpiar pasillo de arriba",1],["Limpiar cuarto",1],
   ["Limpiar entrada",1],["Limpiar escalera",1],["Limpiar cocina",1],["Limpiar patio",1],["Ropa",5]
 ];
-const nuevaFija = ([t,peso]) => ({t, peso, hecha:false, medias:false, fija:true});
-const pesoReal = x => x.medias ? x.peso*2 : x.peso;
+const CADAS = [[1,"Cada día"],[2,"Cada 2 días"],[3,"Cada 3 días"],[7,"Cada semana"],[14,"Cada 2 semanas"],[30,"Cada mes"],[0,"Solo a mano"]];
+const CADA_DEF = 7;
+const CIRC = 2*Math.PI*54;
+const NS = "http://www.w3.org/2000/svg";
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  volver: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>',
+  basura: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+  fiesta: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M7.5 12.5l3 3 6-6.5"/></svg>'
+};
 
-let S = { tareas: FIJAS.map(nuevaFija), reg:[], T:null, bloque:null };
-let rot = 0, girando = false, tic = null, abiertos = {};
+const $ = id => document.getElementById(id);
+const nuevoId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c]);
+const capitaliza = s => s ? s[0].toUpperCase() + s.slice(1) : s;
+const nuevaFija = ([t, peso]) => ({ id:nuevoId(), t, peso, hecha:false, medias:false, fija:true, cada:CADA_DEF, hechaEn:null, min:0 });
+const pesoReal = x => x.medias ? x.peso*2 : x.peso;
+const nombreCada = n => { const c = CADAS.find(([d]) => d === n); return c ? c[1].toLowerCase() : `cada ${n} días`; };
+const listaY = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " y " + a[a.length-1];
+const reduceMov = () => { try{ return matchMedia("(prefers-reduced-motion: reduce)").matches; }catch(e){ return false; } };
+
+let S = { v:2, tareas: FIJAS.map(nuevaFija), reg:[], T:null, bloque:null, cfg:{}, ultCopia:null, copiaLuego:0 };
+let ruedaPendiente = false;
+let rot = 0, girando = false, tic = null, abiertos = {}, premioId = null, firmaReloj = "", AC = null, tipoAlta = "suelta";
+
+const tareaPorId = id => S.tareas.find(x => x.id === id) || null;
+const existeNombre = (t, salvo) => S.tareas.some(y => y !== salvo && y.t.toLowerCase() === t.toLowerCase());
 
 function cargar(){
-  try{ const g = localStorage.getItem(CLAVE); if(g){ const p = JSON.parse(g); if(p && p.tareas) S = Object.assign(S, p); } }catch(e){}
+  let p = null;
+  try{ const g = localStorage.getItem(CLAVE); if(g) p = JSON.parse(g); }catch(e){}
+  if(p && Array.isArray(p.tareas)){
+    S = Object.assign(S, p);
+    if(!p.v){
+      // viene de la v1: allí las fijas estaban metidas en el código y se reponían solas
+      FIJAS.forEach((f,i) => { if(!S.tareas.find(x => x && x.fija && x.t === f[0])) S.tareas.splice(i, 0, nuevaFija(f)); });
+      S.v = 2;
+    }
+  }
+  const ahora = Date.now();
+  S.tareas = S.tareas.filter(x => x && typeof x.t === "string" && x.t.trim());
+  S.tareas.forEach(x => {
+    if(!x.id) x.id = nuevoId();
+    x.peso = Math.min(5, Math.max(1, Math.round(+x.peso) || 1));
+    x.hecha = !!x.hecha; x.medias = !!x.medias; x.fija = !!x.fija;
+    if(typeof x.min !== "number" || !(x.min >= 0)) x.min = 0;
+    if(x.fija){
+      if(typeof x.cada !== "number" || !(x.cada >= 0)) x.cada = CADA_DEF;
+      if(x.hecha && !x.hechaEn) x.hechaEn = ahora;
+    }else{ x.hecha = false; x.hechaEn = null; }
+  });
   if(!Array.isArray(S.reg)) S.reg = [];
-  if(S.bloque && (!S.bloque.desde || Date.now() - S.bloque.desde > 3600000)) S.bloque = null;
-  FIJAS.forEach((f,i) => { if(!S.tareas.find(x => x.fija && x.t === f[0])) S.tareas.splice(i, 0, nuevaFija(f)); });
+  S.cfg = Object.assign({ tanda:15, descanso:15, tema:"auto", sonidos:true, pistaVista:false }, S.cfg || {});
+  if(S.bloque && (!S.bloque.desde || ahora - S.bloque.desde > 3600000)) S.bloque = null;
+  if(S.T){
+    // la v1 apuntaba la tarea del reloj por su posición en la lista; ahora va por id
+    if(S.T.idx != null && !S.T.id){ const x = S.tareas[S.T.idx]; S.T.id = x ? x.id : null; }
+    if(typeof S.T.vuelta === "string" && !tareaPorId(S.T.vuelta)){
+      const x = S.tareas.find(y => y.t === S.T.vuelta); S.T.vuelta = x ? x.id : null;
+    }
+    delete S.T.idx;
+    if(S.T.tipo === "tarea" && !tareaPorId(S.T.id)) S.T = null;
+  }
 }
 function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(e){} }
 
 const pend = () => S.tareas.filter(x => !x.hecha);
-const color = (i,n) => `hsl(${Math.round(i*330/Math.max(n,1))} 55% ${i%2?58:46}%)`;
+const color = (i,n) => `hsl(${Math.round(i*330/Math.max(n,1))} 58% ${i%2?58:46}%)`;
 const fmtFecha = iso => { const d = new Date(iso); return d.toLocaleDateString("es-ES",{day:"numeric",month:"short"}); };
 const fmtSeg = s => s >= 60 ? `${Math.floor(s/60)} min` + (s%60 ? ` ${s%60} s` : "") : `${s} s`;
 const fmtMin = m => m >= 60 ? `${Math.floor(m/60)} h ${m%60 ? (m%60)+" min" : ""}`.trim() : `${m} min`;
+const durTarea = x => ((x && x.min) || S.cfg.tanda) * 60;
+const durDescanso = () => S.cfg.descanso * 60;
 
-/* ---------- rueda ---------- */
-function pintarRueda(){
-  const g = document.getElementById("giro"), P = pend();
-  g.innerHTML = "";
-  if(!P.length) return;
-  const total = P.reduce((a,x) => a + pesoReal(x), 0), R = 145;
-  const pt = a => { const r = (a-90)*Math.PI/180; return [150+R*Math.cos(r), 150+R*Math.sin(r)]; };
-  let acum = 0;
-  P.forEach((x,i) => {
-    const seg = 360*pesoReal(x)/total, a0 = acum, a1 = acum + seg;
-    const [x0,y0] = pt(a0), [x1,y1] = pt(a1);
-    const p = document.createElementNS("http://www.w3.org/2000/svg","path");
-    if(P.length === 1) p.setAttribute("d", `M150,150 m-${R},0 a${R},${R} 0 1,0 ${R*2},0 a${R},${R} 0 1,0 -${R*2},0`);
-    else p.setAttribute("d", `M150,150 L${x0.toFixed(2)},${y0.toFixed(2)} A${R},${R} 0 ${seg>180?1:0},1 ${x1.toFixed(2)},${y1.toFixed(2)} Z`);
-    p.setAttribute("fill", color(i, P.length));
-    p.setAttribute("stroke","rgba(0,0,0,.18)"); p.setAttribute("stroke-width","1");
-    g.appendChild(p);
-    const c = a0 + seg/2 - 90, r = c*Math.PI/180;
-    const tx = 150 + 132*Math.cos(r), ty = 150 + 132*Math.sin(r);
-    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-    t.setAttribute("x", tx.toFixed(2)); t.setAttribute("y", ty.toFixed(2));
-    t.setAttribute("transform", `rotate(${c.toFixed(2)} ${tx.toFixed(2)} ${ty.toFixed(2)})`);
-    t.setAttribute("text-anchor","end"); t.setAttribute("dominant-baseline","middle");
-    t.setAttribute("fill","#fff"); t.setAttribute("font-weight","700");
-    t.setAttribute("font-size", seg < 14 ? 8 : seg < 24 ? 10 : 12);
-    t.setAttribute("style","paint-order:stroke; stroke:rgba(0,0,0,.4); stroke-width:2.2px");
-    const nom = x.t.replace(/^Limpiar /,"");
-    t.textContent = (x.medias ? "› " : "") + (nom.length > 16 ? nom.slice(0,15) + "…" : nom);
-    g.appendChild(t);
-    acum = a1;
+/* ---------- fijas que vuelven solas ---------- */
+function inicioDia(ms){ const d = new Date(ms); d.setHours(0,0,0,0); return d; }
+function vuelveEl(x){
+  if(!x.fija || !x.hecha || !x.cada || !x.hechaEn) return null;
+  const d = inicioDia(x.hechaEn); d.setDate(d.getDate() + x.cada); return +d;
+}
+function textoVuelta(x){
+  if(!x.fija) return "";
+  if(!x.cada) return "vuelve solo a mano";
+  const v = vuelveEl(x); if(!v) return "";
+  const dias = Math.round((v - +inicioDia(Date.now())) / DIA);
+  if(dias <= 0) return "vuelve hoy";
+  if(dias === 1) return "vuelve mañana";
+  if(dias < 7) return "vuelve el " + new Date(v).toLocaleDateString("es-ES", {weekday:"long"});
+  return "vuelve el " + new Date(v).toLocaleDateString("es-ES", {day:"numeric", month:"short"}).replace(".", "");
+}
+function revisarVueltas(silencio){
+  if(girando) return [];
+  const ahora = Date.now(), vuelven = [];
+  S.tareas.forEach(x => { const v = vuelveEl(x); if(v && v <= ahora){ x.hecha = false; x.hechaEn = null; vuelven.push(x.t); } });
+  if(vuelven.length){
+    guardar(); pintar();
+    if(!silencio) toast(vuelven.length === 1 ? `«${vuelven[0]}» vuelve a la rueda` : `Vuelven a la rueda: ${listaY(vuelven)}`);
+  }
+  return vuelven;
+}
+
+/* ---------- avisos con deshacer ---------- */
+let toastT = null, toastDeshacer = null;
+function toast(msg, deshacer, dur){
+  dur = dur || (deshacer ? 6000 : 3200);
+  const t = $("toast"), barra = $("toast-barra");
+  $("toast-txt").textContent = msg;
+  toastDeshacer = deshacer || null;
+  $("toast-btn").hidden = !deshacer;
+  t.style.setProperty("--dur", dur + "ms");
+  barra.classList.remove("corre"); void barra.offsetWidth;
+  if(deshacer) barra.classList.add("corre");
+  t.classList.add("on");
+  clearTimeout(toastT); toastT = setTimeout(cerrarToast, dur);
+}
+function cerrarToast(){ clearTimeout(toastT); $("toast").classList.remove("on"); toastDeshacer = null; }
+function foto(){ return JSON.stringify({ tareas:S.tareas, reg:S.reg, cfg:S.cfg }); }
+function deshacerDe(f){
+  return () => {
+    const p = JSON.parse(f);
+    S.tareas = p.tareas; S.reg = p.reg; S.cfg = p.cfg;
+    cerrarHoja(true); guardar(); aplicarTema(); pintar(); toast("Deshecho");
+  };
+}
+function accion(msg, fn){ const f = foto(); fn(); guardar(); pintar(); toast(msg, deshacerDe(f)); }
+
+/* ---------- utilidades de interfaz ---------- */
+function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
+function boton(texto, cls, fn, icono){
+  const b = el("button", cls);
+  if(icono) b.innerHTML = icono;
+  const s = document.createElement("span"); s.textContent = texto; b.append(s);
+  b.onclick = fn; return b;
+}
+function campo(c, titulo){ const f = el("div", "campo"); if(titulo) f.append(el("div", "lab", esc(titulo))); c.append(f); return f; }
+function segmento(ops, actual, cambio){
+  const s = el("div", "seg");
+  ops.forEach(([v, txt]) => {
+    const b = el("button", v === actual ? "on" : ""); b.textContent = txt; b.setAttribute("aria-pressed", v === actual);
+    b.onclick = () => { if(v !== actual) cambio(v); };
+    s.append(b);
   });
+  return s;
+}
+function stepper(valores, actual, fmt, cambio){
+  if(!valores.includes(actual)) valores = valores.concat(actual).sort((a, b) => a - b);
+  let i = valores.indexOf(actual);
+  const d = el("div", "stepper"), menos = el("button", null, "−"), mas = el("button", null, "+"), v = el("span", "val");
+  menos.setAttribute("aria-label", "Menos"); mas.setAttribute("aria-label", "Más");
+  const pinta = () => { v.textContent = fmt(valores[i]); menos.disabled = i === 0; mas.disabled = i === valores.length - 1; };
+  menos.onclick = () => { if(i > 0){ i--; pinta(); cambio(valores[i]); } };
+  mas.onclick = () => { if(i < valores.length - 1){ i++; pinta(); cambio(valores[i]); } };
+  pinta(); d.append(menos, v, mas); return d;
+}
+function interruptor(on, cambio, etiqueta){
+  const b = el("button", "interruptor" + (on ? " on" : ""));
+  b.setAttribute("role", "switch"); b.setAttribute("aria-checked", on);
+  if(etiqueta) b.setAttribute("aria-label", etiqueta);
+  b.onclick = () => { on = !on; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); cambio(on); };
+  return b;
 }
 
-/* ---------- listas ---------- */
-function stepper(val, menos, mas){
-  const d = document.createElement("div"); d.className = "grupo";
-  const a = document.createElement("button"); a.textContent = "−"; a.onclick = menos;
-  const s = document.createElement("span"); s.className = "val"; s.textContent = val;
-  const b = document.createElement("button"); b.textContent = "+"; b.onclick = mas;
-  d.append(a,s,b); return d;
+/* ---------- hoja de abajo ---------- */
+let alCerrar = null;
+function abrirHoja(construir, cerrarCb){
+  const h = $("hoja");
+  construir($("hoja-cont")); alCerrar = cerrarCb || null;
+  h.style.transform = ""; h.scrollTop = 0;
+  $("velo").classList.add("on"); h.classList.add("on"); h.setAttribute("aria-hidden", "false");
+  document.body.classList.add("con-hoja");
 }
+function cerrarHoja(forzar){
+  const h = $("hoja");
+  if(!h.classList.contains("on")) return;
+  const f = alCerrar; alCerrar = null;
+  if(f && !forzar) f();
+  $("velo").classList.remove("on"); h.classList.remove("on"); h.setAttribute("aria-hidden", "true"); h.style.transform = "";
+  document.body.classList.remove("con-hoja");
+  if(h.contains(document.activeElement)) document.activeElement.blur();
+}
+(() => {
+  // arrastrar la hoja hacia abajo la cierra
+  const h = $("hoja"); let y0 = null, dy = 0;
+  h.addEventListener("touchstart", e => {
+    if(h.scrollTop > 0 || e.touches[0].clientY - h.getBoundingClientRect().top > 64){ y0 = null; return; }
+    y0 = e.touches[0].clientY; dy = 0; h.style.transition = "none";
+  }, {passive:true});
+  h.addEventListener("touchmove", e => {
+    if(y0 === null) return;
+    dy = Math.max(0, e.touches[0].clientY - y0);
+    h.style.transform = `translateY(${dy}px)`;
+  }, {passive:true});
+  const suelta = () => {
+    if(y0 === null) return;
+    y0 = null; h.style.transition = "";
+    if(dy > 90) cerrarHoja(); else h.style.transform = "";
+  };
+  h.addEventListener("touchend", suelta); h.addEventListener("touchcancel", suelta);
+})();
 
-function filaTarea(x, P){
-  const li = document.createElement("li"); if(x.hecha) li.className = "hecha";
-  const f1 = document.createElement("div"); f1.className = "fila1";
-  const d = document.createElement("span"); d.className = "punto";
-  d.style.background = x.hecha ? "var(--line)" : color(P.indexOf(x), P.length);
-  const nom = document.createElement("input"); nom.className = "nom"; nom.value = x.t;
-  if(x.fija) nom.readOnly = true;
-  else nom.onchange = () => { const v = nom.value.trim(); if(v) x.t = v; else nom.value = x.t; guardar(); pintarRueda(); };
-  f1.append(d, nom);
-  if(x.hecha){
-    const v = document.createElement("button"); v.className = "mini"; v.textContent = "Volver";
-    v.onclick = () => { x.hecha = false; guardar(); pintar(); };
-    f1.append(v);
-  }else{
-    const h = document.createElement("button"); h.className = "mini"; h.textContent = "Hecha";
-    h.onclick = () => marcarHecha(x);
-    f1.append(h);
-    if(!x.fija){
-      const del = document.createElement("button"); del.className = "mini x"; del.textContent = "×";
-      del.onclick = () => { S.tareas.splice(S.tareas.indexOf(x),1); guardar(); pintar(); };
-      f1.append(del);
+/* editar una tarea */
+function editar(x){
+  if(!S.cfg.pistaVista){ S.cfg.pistaVista = true; guardar(); $("pista").hidden = true; }
+  let inp = null;
+  const id = x.id;
+  const validar = () => {
+    const y = tareaPorId(id);
+    if(!inp || !y) return;
+    const v = inp.value.trim();
+    if(!v || v === y.t){ inp.value = y.t; return; }
+    if(existeNombre(v, y)){ toast("Ya hay una tarea con ese nombre"); inp.value = y.t; return; }
+    renombrar(y, v);
+  };
+  const pinta = c => {
+    const y = tareaPorId(id);
+    if(!y){ cerrarHoja(true); return; }
+    c.innerHTML = "";
+    const enFaena = S.T && S.T.tipo === "tarea" && S.T.id === y.id;
+    const h = el("h3", null, "Editar tarea"); h.id = "hoja-tit"; c.append(h);
+
+    const f1 = campo(c, "Nombre");
+    inp = el("input"); inp.type = "text"; inp.value = y.t; inp.maxLength = 60; inp.autocomplete = "off";
+    inp.setAttribute("enterkeyhint", "done"); inp.setAttribute("aria-label", "Nombre de la tarea");
+    inp.onchange = validar; inp.onkeydown = e => { if(e.key === "Enter") inp.blur(); };
+    f1.append(inp);
+
+    const f2 = campo(c, "Tipo");
+    f2.append(segmento([["suelta","Suelta"],["fija","Fija"]], y.fija ? "fija" : "suelta", v => { validar(); cambiarTipo(tareaPorId(id), v === "fija"); pinta(c); }));
+    f2.append(el("div", "ayuda", y.fija ? "Cuando la terminas, vuelve sola a la rueda cuando le toca." : "Se hace una vez y desaparece de la rueda."));
+
+    if(y.fija){
+      const f3 = campo(c, "Vuelve a la rueda");
+      const ch = el("div", "chips");
+      CADAS.forEach(([d, txt]) => {
+        const b = el("button", d === y.cada ? "on" : ""); b.textContent = txt; b.setAttribute("aria-pressed", d === y.cada);
+        b.onclick = () => { validar(); const z = tareaPorId(id); if(!z) return; z.cada = d; guardar(); revisarVueltas(); pintar(); pinta(c); };
+        ch.append(b);
+      });
+      f3.append(ch);
+      if(y.hecha) f3.append(el("div", "ayuda", esc(capitaliza(textoVuelta(y))) + "."));
     }
-  }
-  li.append(f1);
-  if(!x.hecha){
-    const f2 = document.createElement("div"); f2.className = "fila2";
-    f2.append(stepper("peso ×" + x.peso,
-      () => { x.peso = Math.max(1, x.peso-1); guardar(); pintar(); },
-      () => { x.peso = Math.min(5, x.peso+1); guardar(); pintar(); }));
-    const e = document.createElement("button"); e.className = "etq" + (x.medias ? " on" : "");
-    e.textContent = x.medias ? "a medias · tira ×" + pesoReal(x) : "a medias";
-    e.onclick = () => { x.medias = !x.medias; guardar(); pintar(); };
-    f2.append(e);
-    li.append(f2);
-  }
-  return li;
-}
 
-function marcarHecha(x){
-  x.medias = false;
-  if(x.fija) x.hecha = true;
-  else S.tareas.splice(S.tareas.indexOf(x),1);
+    const f4 = campo(c, "Peso en la rueda");
+    f4.append(stepper([1,2,3,4,5], y.peso, v => "×" + v, v => { const z = tareaPorId(id); if(z){ z.peso = v; guardar(); pintar(); } }));
+    f4.append(el("div", "ayuda", "Cuanto más peso, más trozo de rueda y más fácil que salga."));
+
+    const f5 = campo(c, "Tiempo de tanda");
+    f5.append(stepper([0,5,10,15,20,25,30,40,45,60], y.min || 0, v => v ? v + " min" : `El general (${S.cfg.tanda} min)`,
+      v => { const z = tareaPorId(id); if(z){ z.min = v; guardar(); pintar(); } }));
+
+    if(!y.hecha){
+      const f6 = el("div", "campo fila-ajuste");
+      f6.innerHTML = `<div><div class="lab">A medias</div><div class="ayuda">Si está a medias, sale el doble de fácil.</div></div>`;
+      f6.append(interruptor(y.medias, v => { const z = tareaPorId(id); if(z){ z.medias = v; guardar(); pintar(); } }, "A medias"));
+      c.append(f6);
+    }
+
+    const acc = el("div", "fila-btn");
+    if(y.hecha) acc.append(boton("Volver a la rueda", "", () => { validar(); cerrarHoja(true); const z = tareaPorId(id); if(z) volverRueda(z); }, ICON.volver));
+    else if(!enFaena) acc.append(boton("Marcar hecha", "", () => { validar(); cerrarHoja(true); const z = tareaPorId(id); if(z) hechaDesdeLista(z); }, ICON.check));
+    const del = boton("Borrar", "b-peligro", () => {
+      validar(); cerrarHoja(true);
+      const z = tareaPorId(id); if(!z) return;
+      accion(`«${z.t}» borrada`, () => { const k = S.tareas.indexOf(z); if(k >= 0) S.tareas.splice(k, 1); });
+    }, ICON.basura);
+    del.disabled = !!enFaena;
+    acc.append(del); c.append(acc);
+    if(enFaena) c.append(el("div", "ayuda", "Está en faena: ciérrala desde el reloj para poder borrarla."));
+    c.append(boton("Listo", "b-acc listo", () => cerrarHoja()));
+  };
+  abrirHoja(pinta, validar);
+}
+function renombrar(x, nuevo){
+  const viejo = x.t;
+  S.reg.forEach(r => { if(r.t === viejo && !!r.fija === x.fija) r.t = nuevo; });
+  x.t = nuevo; guardar(); pintar();
+}
+function cambiarTipo(x, fija){
+  if(!x || x.fija === fija) return;
+  S.reg.forEach(r => { if(r.t === x.t && !!r.fija === x.fija) r.fija = fija; });
+  x.fija = fija;
+  if(fija){ if(typeof x.cada !== "number") x.cada = CADA_DEF; x.hechaEn = x.hecha ? (x.hechaEn || Date.now()) : null; }
+  else { x.hecha = false; x.hechaEn = null; }
   guardar(); pintar();
 }
 
-function pintarListas(){
-  const P = pend();
-  const ul = document.getElementById("lista"); ul.innerHTML = "";
-  P.forEach(x => ul.appendChild(filaTarea(x, P)));
-  const H = S.tareas.filter(x => x.hecha);
-  const uh = document.getElementById("hechas"); uh.innerHTML = "";
-  H.forEach(x => uh.appendChild(filaTarea(x, P)));
-  document.getElementById("bloque-hechas").hidden = !H.length;
-
-  const hoy = new Date().toDateString();
-  const tandasHoy = S.reg.filter(r => new Date(r.fecha).toDateString() === hoy).length;
-  document.getElementById("cuenta").textContent =
-    `${P.length} en la rueda` + (tandasHoy ? ` · ${tandasHoy} tanda${tandasHoy>1?"s":""} hoy` : "");
-  const b = document.getElementById("girar");
-  b.disabled = !P.length || girando || !!S.T;
-  b.textContent = !P.length ? "Rueda vacía"
-    : S.T ? (S.T.tipo === "tarea" ? "Estás en faena" : "Estás descansando")
-    : S.bloque ? `Girar · quedan ${fmtSeg(S.bloque.seg)} del bloque` : "Girar";
+/* ajustes */
+function ajustes(){
+  const pinta = c => {
+    c.innerHTML = "";
+    const h = el("h3", null, "Ajustes"); h.id = "hoja-tit"; c.append(h);
+    const f1 = campo(c, "Tanda");
+    f1.append(stepper([5,10,15,20,25,30,40,45,50,60], S.cfg.tanda, v => v + " min", v => { S.cfg.tanda = v; guardar(); pintar(); }));
+    f1.append(el("div", "ayuda", "Lo que dura cada tanda de faena. Cada tarea puede tener el suyo propio."));
+    const f2 = campo(c, "Descanso");
+    f2.append(stepper([5,10,15,20,25,30], S.cfg.descanso, v => v + " min", v => { S.cfg.descanso = v; guardar(); }));
+    const f3 = campo(c, "Tema");
+    f3.append(segmento([["auto","Automático"],["light","Claro"],["dark","Oscuro"]], S.cfg.tema, v => { S.cfg.tema = v; guardar(); aplicarTema(); pinta(c); }));
+    const f4 = el("div", "campo fila-ajuste");
+    f4.innerHTML = `<div><div class="lab">Sonido al girar</div><div class="ayuda">El tic-tic de la ruleta y la campanita al parar.</div></div>`;
+    f4.append(interruptor(S.cfg.sonidos, v => { S.cfg.sonidos = v; guardar(); }, "Sonido al girar"));
+    c.append(f4);
+    const f5 = campo(c, "Copia de seguridad");
+    const fb = el("div", "fila-btn");
+    fb.append(boton("Guardar copia", "", exportar), boton("Recuperar copia", "", () => $("fichero").click()));
+    f5.append(fb);
+    f5.append(el("div", "ayuda", esc(infoCopia())));
+    c.append(boton("Listo", "b-acc listo", () => cerrarHoja()));
+  };
+  abrirHoja(pinta);
+}
+function aplicarTema(){
+  const t = S.cfg.tema;
+  if(t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  let oscuro = t === "dark";
+  if(t !== "light" && t !== "dark"){ try{ oscuro = matchMedia("(prefers-color-scheme: dark)").matches; }catch(e){} }
+  const m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute("content", oscuro ? "#17171a" : "#f6f5f2");
 }
 
+/* ---------- rueda ---------- */
+function segmentos(P){
+  const total = P.reduce((a,x) => a + pesoReal(x), 0);
+  let acum = 0;
+  return P.map(x => { const a0 = 360*acum/total; acum += pesoReal(x); return { x, a0, a1: 360*acum/total }; });
+}
+function pintarRueda(){
+  if(girando){ ruedaPendiente = true; return; }
+  const g = $("giro"), P = pend(), disco = $("disco");
+  g.innerHTML = "";
+  if(!P.length){ disco.classList.remove("premio"); return; }
+  const R = 138;
+  const pt = a => { const r = (a-90)*Math.PI/180; return [150+R*Math.cos(r), 150+R*Math.sin(r)]; };
+  segmentos(P).forEach(({x, a0, a1}, i) => {
+    const seg = a1 - a0;
+    const p = document.createElementNS(NS, "path");
+    if(P.length === 1) p.setAttribute("d", `M150,150 m-${R},0 a${R},${R} 0 1,0 ${R*2},0 a${R},${R} 0 1,0 -${R*2},0`);
+    else {
+      const [x0,y0] = pt(a0), [x1,y1] = pt(a1);
+      p.setAttribute("d", `M150,150 L${x0.toFixed(2)},${y0.toFixed(2)} A${R},${R} 0 ${seg>180?1:0},1 ${x1.toFixed(2)},${y1.toFixed(2)} Z`);
+    }
+    p.setAttribute("fill", color(i, P.length));
+    p.setAttribute("stroke", "rgba(0,0,0,.16)"); p.setAttribute("stroke-width", "1");
+    p.setAttribute("data-id", x.id);
+    g.appendChild(p);
+    const c = a0 + seg/2 - 90, r = c*Math.PI/180;
+    const tx = 150 + 126*Math.cos(r), ty = 150 + 126*Math.sin(r);
+    const t = document.createElementNS(NS, "text");
+    t.setAttribute("x", tx.toFixed(2)); t.setAttribute("y", ty.toFixed(2));
+    t.setAttribute("transform", `rotate(${c.toFixed(2)} ${tx.toFixed(2)} ${ty.toFixed(2)})`);
+    t.setAttribute("text-anchor", "end"); t.setAttribute("dominant-baseline", "middle");
+    t.setAttribute("fill", "#fff"); t.setAttribute("font-weight", "700");
+    t.setAttribute("font-size", seg < 14 ? 8 : seg < 24 ? 10 : 12);
+    t.setAttribute("style", "paint-order:stroke; stroke:rgba(0,0,0,.4); stroke-width:2.2px");
+    t.setAttribute("data-id", x.id);
+    const nom = x.t.replace(/^Limpiar /, "");
+    t.textContent = (x.medias ? "› " : "") + (nom.length > 15 ? nom.slice(0, 14) + "…" : nom);
+    g.appendChild(t);
+  });
+  const ganador = premioId && P.some(x => x.id === premioId);
+  disco.classList.toggle("premio", !!ganador);
+  if(ganador) g.querySelectorAll(`[data-id="${premioId}"]`).forEach(e => e.classList.add("gana"));
+}
+function construirLuces(){
+  const g = $("luces"); g.innerHTML = "";
+  for(let k = 0; k < 24; k++){
+    const a = k*15*Math.PI/180, c = document.createElementNS(NS, "circle");
+    c.setAttribute("cx", (150 + 144*Math.cos(a)).toFixed(2)); c.setAttribute("cy", (150 + 144*Math.sin(a)).toFixed(2));
+    c.setAttribute("r", "2.6"); c.setAttribute("class", "luz");
+    g.appendChild(c);
+  }
+}
+function quitarPremio(){ premioId = null; $("disco").classList.remove("premio"); $("giro").querySelectorAll(".gana").forEach(e => e.classList.remove("gana")); }
+
+/* sonidos de la ruleta (Web Audio, cortos y flojos) */
+function audioCtx(){
+  try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); if(AC.state === "suspended") AC.resume(); }catch(e){ AC = null; }
+  return AC;
+}
+function clic(){
+  if(!S.cfg.sonidos || !AC) return;
+  try{
+    const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
+    o.type = "triangle"; o.frequency.setValueAtTime(2100, t); o.frequency.exponentialRampToValueAtTime(700, t + .03);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + .05);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .06);
+  }catch(e){}
+}
+function campanita(){
+  if(!S.cfg.sonidos || !AC) return;
+  try{
+    const t = AC.currentTime;
+    [[880, 0], [1320, .1]].forEach(([f, d]) => {
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = "sine"; o.frequency.value = f;
+      g.gain.setValueAtTime(.0001, t + d); g.gain.exponentialRampToValueAtTime(.18, t + d + .012); g.gain.exponentialRampToValueAtTime(.0001, t + d + .6);
+      o.connect(g); g.connect(AC.destination); o.start(t + d); o.stop(t + d + .65);
+    });
+  }catch(e){}
+}
+const vibrar = ms => { try{ if(S.cfg.sonidos && navigator.vibrate) navigator.vibrate(ms); }catch(e){} };
+
+function girar(){
+  const P = pend();
+  if(girando || !P.length || S.T) return;
+  girando = true; cerrarAlta(); salida().innerHTML = ""; quitarPremio(); pintarListas();
+  audioCtx();
+  const segs = segmentos(P), total = P.reduce((a,x) => a + pesoReal(x), 0);
+  let r = Math.random()*total, i = 0;
+  for(let k = 0, acum = 0; k < P.length; k++){ acum += pesoReal(P[k]); if(r < acum){ i = k; break; } }
+  const s = segs[i], ancho = s.a1 - s.a0;
+  const centro = s.a0 + ancho/2 + (Math.random()-.5)*ancho*.6;
+  const corto = reduceMov();
+  const desde = rot;
+  const hasta = rot + ((((360 - centro) - (rot % 360)) % 360) + 360) % 360 + 360*(corto ? 1 : 5 + Math.floor(Math.random()*2));
+  const dur = corto ? 900 : 4800 + Math.random()*700;
+  const disco = $("disco"), aguja = $("aguja"), sobre = $("sobre"), fronteras = segs.map(z => z.a1);
+  sobre.classList.remove("premio"); sobre.classList.add("girando");
+  const segEn = deg => { const a = ((360 - (deg % 360)) % 360 + 360) % 360; let k = 0; while(k < fronteras.length - 1 && a >= fronteras[k]) k++; return k; };
+  const ease = t => 1 - Math.pow(1 - t, 4);
+  let t0 = null, ultimo = segEn(desde), tUlt = -1e9, acabado = false;
+  const fin = () => {
+    if(acabado) return; acabado = true;
+    rot = hasta; aguja.style.transform = "";
+    girando = false; sobre.classList.remove("girando");
+    const t = tareaPorId(P[i].id), cambio = ruedaPendiente;
+    ruedaPendiente = false;
+    if(!t || t.hecha){ disco.style.transform = `rotate(${rot}deg)`; pintar(); return; }
+    if(cambio){
+      // la lista cambió mientras giraba: se recoloca la rueda para que la aguja quede sobre la que toca
+      const z = segmentos(pend()).find(q => q.x.id === t.id);
+      if(z) rot = rot - (((rot % 360) + 360) % 360) + (((360 - (z.a0 + z.a1)/2) % 360) + 360) % 360;
+    }
+    disco.style.transform = `rotate(${rot}deg)`;
+    premioId = t.id; pintarRueda();
+    void sobre.getBoundingClientRect(); sobre.classList.add("premio");
+    campanita(); vibrar([18, 40, 18]);
+    const P2 = pend();
+    tarjetaPremio(t, color(P2.indexOf(t), P2.length));
+    pintarListas();
+  };
+  const paso = now => {
+    if(acabado) return;
+    if(t0 === null) t0 = now;
+    const p = Math.min(1, (now - t0)/dur), deg = desde + (hasta - desde)*ease(p);
+    disco.style.transform = `rotate(${deg}deg)`;
+    const k = segEn(deg);
+    if(k !== ultimo){ ultimo = k; if(now - tUlt > 32){ tUlt = now; clic(); vibrar(4); } }
+    aguja.style.transform = `rotate(${(-24*Math.max(0, 1 - (now - tUlt)/110)).toFixed(2)}deg)`;
+    if(p < 1) requestAnimationFrame(paso); else fin();
+  };
+  requestAnimationFrame(paso);
+  setTimeout(fin, dur + 1500); // por si la pantalla se bloquea a mitad de giro
+}
+function tarjetaPremio(t, col){
+  const c = el("div", "tarjeta entra premio-card");
+  const dur = S.bloque ? S.bloque.seg : durTarea(t);
+  c.innerHTML = `<div class="rot">Te toca</div><div class="que"><span class="punto" style="background:${col}"></span>${esc(t.t)}</div>
+    <div class="det">${t.medias ? "La tenías a medias · " : ""}${S.bloque ? "lo que queda del bloque: " + fmtSeg(dur) : "tanda de " + fmtSeg(dur)}</div>`;
+  const b = el("div", "btns"), id = t.id;
+  b.append(boton("Empezar", "b-acc", () => {
+    const x = tareaPorId(id);
+    if(!x || x.hecha){ salida().innerHTML = ""; quitarPremio(); toast("Esa tarea ya no está en la rueda"); return; }
+    arrancar("tarea", S.bloque ? S.bloque.seg : durTarea(x), x.id);
+  }, ICON.play));
+  b.append(boton("Otra", "", () => { salida().innerHTML = ""; girar(); }));
+  c.append(b);
+  salida().innerHTML = ""; salida().appendChild(c);
+}
+
+/* ---------- listas ---------- */
+function filaTarea(x, P){
+  const li = el("li", "tarea"); li.dataset.id = x.id;
+  const enFaena = S.T && S.T.tipo === "tarea" && S.T.id === x.id;
+  const cuerpo = el("button", "cuerpo"); cuerpo.setAttribute("aria-label", `Editar ${x.t}`);
+  const chips = [], meta = [];
+  if(enFaena) chips.push(`<span class="chip faena">en faena</span>`);
+  if(x.medias && !x.hecha) chips.push(`<span class="chip medias">a medias</span>`);
+  if(x.hecha) meta.push(textoVuelta(x));
+  else {
+    meta.push(x.fija ? nombreCada(x.cada) : "suelta");
+    if(x.peso > 1) meta.push("sale ×" + x.peso);
+    if(x.min) meta.push(x.min + " min");
+  }
+  const fondo = x.hecha ? "var(--line)" : color(P.indexOf(x), P.length);
+  cuerpo.innerHTML = `<span class="punto" style="background:${fondo}"></span><span class="txt"><span class="nom">${esc(x.t)}</span>`
+    + `<span class="meta">${chips.join("")}<span>${esc(meta.filter(Boolean).join(" · "))}</span></span></span>`;
+  cuerpo.onclick = () => editar(x);
+  li.append(cuerpo);
+  if(!enFaena){
+    const b = x.hecha ? boton("Volver", "accion", () => volverRueda(x), ICON.volver) : boton("Hecha", "accion", () => hechaDesdeLista(x), ICON.check);
+    b.setAttribute("aria-label", x.hecha ? `Devolver ${x.t} a la rueda` : `Marcar ${x.t} como hecha`);
+    li.append(b);
+  }
+  return li;
+}
+function completar(x){
+  x.medias = false;
+  if(x.fija){ x.hecha = true; x.hechaEn = Date.now(); }
+  else { const k = S.tareas.indexOf(x); if(k >= 0) S.tareas.splice(k, 1); }
+}
+function salidaAnimada(id, fn){
+  const li = document.querySelector(`.tarea[data-id="${id}"]`);
+  if(li && li.classList.contains("sale")) return;
+  if(!li || reduceMov()){ fn(); return; }
+  li.classList.add("sale"); setTimeout(fn, 230);
+}
+function hechaDesdeLista(x){
+  const id = x.id;
+  salidaAnimada(id, () => {
+    const y = tareaPorId(id); if(!y || y.hecha) return;
+    accion(y.fija ? `«${y.t}» hecha` : `«${y.t}» hecha y quitada`, () => completar(y));
+    if(!pend().length) celebrar(true);
+  });
+}
+function volverRueda(x){
+  const id = x.id;
+  salidaAnimada(id, () => {
+    const y = tareaPorId(id); if(!y || !y.hecha) return;
+    accion(`«${y.t}» vuelve a la rueda`, () => { y.hecha = false; y.hechaEn = null; });
+  });
+}
+function devolverTodas(){
+  const H = S.tareas.filter(x => x.hecha);
+  if(!H.length) return;
+  accion(H.length === 1 ? `«${H[0].t}» vuelve a la rueda` : `${H.length} tareas vuelven a la rueda`, () => H.forEach(x => { x.hecha = false; x.hechaEn = null; }));
+}
+
+function pintarListas(){
+  const P = pend(), H = S.tareas.filter(x => x.hecha);
+  const ul = $("lista"); ul.innerHTML = "";
+  P.forEach(x => ul.appendChild(filaTarea(x, P)));
+  $("num-rueda").textContent = P.length;
+  const uh = $("hechas"); uh.innerHTML = "";
+  H.slice().sort((a, b) => (vuelveEl(a) || 9e15) - (vuelveEl(b) || 9e15)).forEach(x => uh.appendChild(filaTarea(x, P)));
+  $("bloque-hechas").hidden = !H.length; $("num-hechas").textContent = H.length;
+
+  const hoy = new Date().toDateString(), R = S.reg.filter(r => new Date(r.fecha).toDateString() === hoy);
+  const min = R.reduce((a, r) => a + r.min, 0);
+  $("hoy").innerHTML = R.length ? `Hoy llevas <b>${R.length} tanda${R.length > 1 ? "s" : ""}</b> · ${fmtMin(min)} de casa` : "Hoy todavía no has hecho ninguna tanda.";
+  const b = $("girar");
+  b.disabled = !P.length || girando || !!S.T;
+  b.textContent = girando ? "Girando…" : !P.length ? "Rueda vacía"
+    : S.T ? (S.T.tipo === "tarea" ? "Estás en faena" : "Estás descansando")
+    : S.bloque ? `Girar · quedan ${fmtSeg(S.bloque.seg)} del bloque` : "Girar";
+  $("caja").classList.toggle("bloqueada", b.disabled);
+}
+function pintarVacio(){
+  const v = $("vacio"), H = S.tareas.filter(x => x.hecha);
+  const prox = H.map(x => [x, vuelveEl(x)]).filter(([, t]) => t).sort((a, b) => a[1] - b[1])[0];
+  const txt = prox ? `Todo hecho. La próxima en volver es ${esc(prox[0].t)}, ${esc(textoVuelta(prox[0]).replace(/^vuelve /, ""))}.`
+    : H.length ? "Todo hecho. Devuelve alguna de las hechas o añade otra con el +." : "No hay tareas. Añade una con el +.";
+  const html = `${ICON.fiesta}<b>${H.length ? "¡Rueda vacía!" : "Rueda vacía"}</b><span>${txt}</span>${H.length ? `<button class="b-acc">Devolver todas</button>` : ""}`;
+  if(v.dataset.html !== html){
+    v.dataset.html = html; v.innerHTML = html;
+    const b = v.querySelector("button"); if(b) b.onclick = devolverTodas;
+  }
+}
 function pintar(){
-  pintarRueda(); pintarListas(); pintarRegistro();
+  if(premioId && !girando && !pend().some(x => x.id === premioId)){
+    premioId = null;
+    if(salida().querySelector(".premio-card")) salida().innerHTML = "";
+  }
+  pintarRueda(); pintarListas(); pintarRegistro(); pintarAvisoCopia();
   const vacio = pend().length === 0;
-  document.getElementById("rueda").style.display = vacio ? "none" : "block";
-  document.getElementById("aguja").style.display = vacio ? "none" : "block";
-  let v = document.getElementById("vacio");
-  if(vacio && !v){
-    v = document.createElement("div"); v.id = "vacio"; v.className = "vacio";
-    v.textContent = "Nada en la rueda. Devuelve alguna de las hechas o añade una con el +.";
-    document.getElementById("caja").appendChild(v);
-  }else if(!vacio && v) v.remove();
+  $("caja").hidden = vacio; $("vacio").hidden = !vacio;
+  $("girar").hidden = vacio; $("sec-rueda").hidden = vacio; $("devolver-todas").hidden = vacio;
+  if(vacio) pintarVacio(); else $("vacio").dataset.html = "";
+}
+
+/* celebración */
+function celebrar(grande){
+  if(reduceMov()) return;
+  const cont = el("div", "confeti"); document.body.appendChild(cont);
+  const cols = ["#f97316","#facc15","#22c55e","#06b6d4","#a855f7","#ef4444","#ec4899"];
+  const n = grande ? 130 : 60, x0 = innerWidth/2, y0 = innerHeight*0.42;
+  for(let i = 0; i < n; i++){
+    const p = document.createElement("i");
+    p.style.background = cols[i % cols.length]; p.style.left = x0 + "px"; p.style.top = y0 + "px";
+    cont.appendChild(p);
+    const ang = Math.random()*Math.PI*2, v = 110 + Math.random()*(grande ? 300 : 220);
+    const dx = Math.cos(ang)*v, dy = Math.sin(ang)*v - 150, giro = (Math.random()-.5)*900;
+    try{
+      p.animate([
+        { transform:"translate(0,0) rotate(0deg)", opacity:1 },
+        { transform:`translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px) rotate(${(giro/2).toFixed(0)}deg)`, opacity:1, offset:.45 },
+        { transform:`translate(${(dx*1.25).toFixed(1)}px,${(dy + 420).toFixed(1)}px) rotate(${giro.toFixed(0)}deg)`, opacity:0 }
+      ], { duration: 1300 + Math.random()*800, easing:"cubic-bezier(.2,.7,.3,1)", fill:"forwards" });
+    }catch(e){ p.remove(); }
+  }
+  setTimeout(() => cont.remove(), 2400);
 }
 
 /* ---------- registro ---------- */
@@ -363,13 +1050,17 @@ function ultimosMeses(n){
   return out;
 }
 const corto = t => t.replace(/^Limpiar /,"");
+function nombresFijas(){
+  const actuales = S.tareas.filter(x => x.fija).map(x => x.t);
+  const antiguas = [...new Set(S.reg.filter(r => r.fija && !actuales.includes(r.t)).map(r => r.t))];
+  return { actuales, antiguas };
+}
 
 function barrasMes(lineas){
   const meses = ultimosMeses(12), por = {};
   lineas.forEach(r => { const k = keyDe(r.fecha); por[k] = (por[k]||0) + r.min; });
   const max = Math.max(1, ...meses.map(m => por[m.key]||0));
-  const wrap = document.createElement("div"); wrap.className = "barras";
-  const capt = document.createElement("div"); capt.className = "capt";
+  const wrap = el("div", "barras"), capt = el("div", "capt");
   const pinta = i => {
     const m = meses[i], v = por[m.key]||0, ant = i ? (por[meses[i-1].key]||0) : null;
     let s = `${MESES[m.m]} ${m.y}: ${v ? fmtMin(v) : "nada"}`;
@@ -382,13 +1073,13 @@ function barrasMes(lineas){
   };
   meses.forEach((m,i) => {
     const v = por[m.key]||0;
-    const col = document.createElement("div"); col.className = "col" + (v ? "" : " cero");
-    const b = document.createElement("div"); b.className = "b"; b.style.height = Math.max(3, Math.round(100*v/max)) + "%";
-    const l = document.createElement("div"); l.className = "l"; l.textContent = MESES[m.m];
+    const col = el("div", "col" + (v ? "" : " cero"));
+    const b = el("div", "b"); b.style.height = Math.max(3, Math.round(100*v/max)) + "%";
+    const l = el("div", "l"); l.textContent = MESES[m.m];
     col.append(b, l); col.onclick = e => { e.stopPropagation(); pinta(i); };
     wrap.appendChild(col);
   });
-  const cont = document.createElement("div"); cont.append(wrap, capt);
+  const cont = el("div"); cont.append(wrap, capt);
   pinta(meses.length-1);
   return cont;
 }
@@ -399,7 +1090,6 @@ function pintarMesActual(){
   const E = de(est.key), A = de(ant.key);
   const mE = E.reduce((a,r) => a + r.min, 0), mA = A.reduce((a,r) => a + r.min, 0);
   const dias = new Set(E.map(r => new Date(r.fecha).toDateString())).size;
-  const box = document.getElementById("mesbox");
   let d;
   if(!mE && !mA) d = "Cuando cierres tandas, aquí verás el mes contra el anterior.";
   else if(!mA) d = `Primer mes con registro. ${dias} día${dias!==1?"s":""} de faena.`;
@@ -408,25 +1098,28 @@ function pintarMesActual(){
     d = dif === 0 ? `Clavado con ${MESES[ant.m]}.`
       : `<b>${dif > 0 ? "+" : "−"}${fmtMin(Math.abs(dif))}</b> que en ${MESES[ant.m]} (${fmtMin(mA)}) · ${dias} día${dias!==1?"s":""} de faena`;
   }
-  box.innerHTML = `<div class="g">${fmtMin(mE)}<small>en ${MESES[est.m]}</small></div><div class="d">${d}</div>`;
+  $("mesbox").innerHTML = `<div class="g">${fmtMin(mE)}<small>en ${MESES[est.m]}</small></div><div class="d">${d}</div>`;
 }
 
 function pintarMapa(){
-  const bloque = document.getElementById("bloque-mapa");
+  const bloque = $("bloque-mapa");
   if(!S.reg.length){ bloque.hidden = true; return; }
-  bloque.hidden = false;
   const meses = ultimosMeses(12), por = {};
   S.reg.filter(r => r.fija).forEach(r => { const k = r.t + "|" + keyDe(r.fecha); por[k] = (por[k]||0) + r.min; });
+  const NF = nombresFijas();
+  const filas = NF.actuales.concat(NF.antiguas.filter(t => meses.some(m => por[t + "|" + m.key])));
+  if(!filas.length){ bloque.hidden = true; return; }
+  bloque.hidden = false;
   const max = Math.max(1, ...Object.values(por));
-  const g = document.getElementById("mapa"); g.innerHTML = "";
-  const capt = document.getElementById("mapa-capt");
+  const g = $("mapa"); g.innerHTML = "";
+  const capt = $("mapa-capt");
   g.appendChild(document.createElement("div"));
-  meses.forEach(m => { const h = document.createElement("div"); h.className = "h"; h.textContent = MESES[m.m].slice(0,1); g.appendChild(h); });
-  FIJAS.forEach(([t]) => {
-    const r = document.createElement("div"); r.className = "r"; r.textContent = corto(t); g.appendChild(r);
+  meses.forEach(m => { const h = el("div", "h"); h.textContent = MESES[m.m].slice(0,1); g.appendChild(h); });
+  filas.forEach(t => {
+    const r = el("div", "r"); r.textContent = corto(t); g.appendChild(r);
     meses.forEach(m => {
       const v = por[t + "|" + m.key]||0;
-      const c = document.createElement("div"); c.className = "c" + (v ? "" : " cero");
+      const c = el("div", "c" + (v ? "" : " cero"));
       if(v) c.style.opacity = (0.2 + 0.8*v/max).toFixed(2);
       c.onclick = () => {
         g.querySelectorAll(".c").forEach(x => x.classList.remove("sel")); c.classList.add("sel");
@@ -438,42 +1131,39 @@ function pintarMapa(){
 }
 
 function pintarCurio(){
-  const bloque = document.getElementById("bloque-curio");
+  const bloque = $("bloque-curio");
   const R = S.reg;
   if(R.length < 3){ bloque.hidden = true; return; }
   bloque.hidden = false;
-  const c = document.getElementById("curio"); c.innerHTML = "";
-  const add = (tit, txt) => { const d = document.createElement("div"); d.innerHTML = `<span>${tit}</span>${txt}`; c.appendChild(d); };
+  const c = $("curio"); c.innerHTML = "";
+  const add = (tit, txt) => { const d = el("div"); d.innerHTML = `<span>${tit}</span>${txt}`; c.appendChild(d); };
 
-  // mes más duro
   const porMes = {}; R.forEach(r => { const k = keyDe(r.fecha); porMes[k] = (porMes[k]||0) + r.min; });
   const [mk, mv] = Object.entries(porMes).sort((a,b) => b[1]-a[1])[0];
   add("El mes más duro", `${MESES[+mk.slice(5)-1]} ${mk.slice(0,4)}, con ${fmtMin(mv)}.`);
 
-  // día récord
   const porDia = {}; R.forEach(r => { const k = new Date(r.fecha).toDateString(); porDia[k] = (porDia[k]||0) + r.min; });
   const [dk, dv] = Object.entries(porDia).sort((a,b) => b[1]-a[1])[0];
   add("El día que más le diste", `${new Date(dk).toLocaleDateString("es-ES",{weekday:"long", day:"numeric", month:"long"})}: ${fmtMin(dv)} seguidos, con descansos.`);
 
-  // la más constante (más meses distintos) y la más olvidada
   const mesesPor = {}; R.filter(r => r.fija).forEach(r => { (mesesPor[r.t] = mesesPor[r.t] || new Set()).add(keyDe(r.fecha)); });
   const cons = Object.entries(mesesPor).sort((a,b) => b[1].size - a[1].size)[0];
-  if(cons && cons[1].size > 1) add("La más constante", `${corto(cons[0])}: ha caído en ${cons[1].size} meses distintos.`);
+  if(cons && cons[1].size > 1) add("La más constante", `${esc(corto(cons[0]))}: ha caído en ${cons[1].size} meses distintos.`);
   const ult = {}; R.filter(r => r.fija).forEach(r => { if(!ult[r.t] || r.fecha > ult[r.t]) ult[r.t] = r.fecha; });
-  const olvidadas = FIJAS.map(([t]) => [t, ult[t]]).sort((a,b) => (a[1]||"") < (b[1]||"") ? -1 : 1);
-  const [ot, of] = olvidadas[0];
-  if(!of) add("La que nunca ha salido", `${corto(ot)}. Está en la rueda, pero no ha caído ni una vez.`);
-  else {
-    const dias = Math.round((Date.now() - new Date(of)) / 86400000);
-    if(dias >= 14) add("La más abandonada", `${corto(ot)}: ${dias} días desde la última vez.`);
+  const act = nombresFijas().actuales;
+  if(act.length){
+    const [ot, of] = act.map(t => [t, ult[t]]).sort((a,b) => (a[1]||"").localeCompare(b[1]||""))[0];
+    if(!of) add("La que nunca ha salido", `${esc(corto(ot))}. Está entre las fijas, pero no ha caído ni una vez.`);
+    else {
+      const dias = Math.round((Date.now() - new Date(of)) / DIA);
+      if(dias >= 14) add("La más abandonada", `${esc(corto(ot))}: ${dias} días desde la última vez.`);
+    }
   }
 
-  // a medias: cuál se te resiste
   const res = {}; R.filter(r => r.fija).forEach(r => { const o = res[r.t] = res[r.t] || {n:0, m:0}; o.n++; if(r.res !== "terminada") o.m++; });
   const peor = Object.entries(res).filter(([,o]) => o.n >= 2 && o.m > 0).sort((a,b) => b[1].m/b[1].n - a[1].m/a[1].n)[0];
-  if(peor) add("La que más se te resiste", `${corto(peor[0])}: ${peor[1].m} de ${peor[1].n} tandas se quedaron a medias.`);
+  if(peor) add("La que más se te resiste", `${esc(corto(peor[0]))}: ${peor[1].m} de ${peor[1].n} tandas se quedaron a medias.`);
 
-  // ritmo
   const tandas = R.length, dias = Object.keys(porDia).length;
   add("Tu ritmo", `${tandas} tandas en ${dias} día${dias!==1?"s":""}, ${(tandas/dias).toFixed(1)} por día de faena.`);
 }
@@ -487,41 +1177,45 @@ function pintarRegistro(){
     if(!o.ult || r.fecha > o.ult) o.ult = r.fecha;
   });
   const maxMin = Math.max(1, ...Object.values(porTarea).map(o => o.min));
+  const vacio = k => ({t:k, veces:0, min:0, ult:null, lineas:[]});
 
-  const bloque = (o, cont, nombre) => {
-    const f = document.createElement("div"); f.className = "f" + (abiertos[o.t] ? " abierto" : "");
-    const cab = document.createElement("div"); cab.className = "cab2";
-    cab.innerHTML = `<span class="n">${nombre}</span><span class="m">${fmtMin(o.min)}</span>`;
+  const bloque = (o, cont, nombre, borrada) => {
+    const f = el("div", "f" + (abiertos[o.t] ? " abierto" : ""));
+    const cab = el("div", "cab2");
+    cab.innerHTML = `<span class="n">${esc(nombre)}</span><span class="m">${fmtMin(o.min)}</span>${o.veces ? `<span class="flecha">▾</span>` : ""}`;
     cab.onclick = () => { abiertos[o.t] = !abiertos[o.t]; f.classList.toggle("abierto"); };
-    const sub = document.createElement("div"); sub.className = "sub";
-    sub.textContent = o.veces
+    const sub = el("div", "sub");
+    sub.textContent = (o.veces
       ? `${o.veces} tanda${o.veces>1?"s":""} · ${Math.round(o.min/o.veces)} min de media · última ${fmtFecha(o.ult)}`
-      : "todavía nada";
-    const barra = document.createElement("div"); barra.className = "barra";
-    barra.innerHTML = `<i style="width:${Math.round(100*o.min/maxMin)}%"></i>`;
-    const det = document.createElement("div"); det.className = "det2";
+      : "todavía nada") + (borrada ? " · ya no está entre las fijas" : "");
+    const barra = el("div", "barra", `<i style="width:${Math.round(100*o.min/maxMin)}%"></i>`);
+    const det = el("div", "det2");
     if(o.veces) det.appendChild(barrasMes(o.lineas));
-    const lista = document.createElement("div"); lista.style.marginTop = "8px";
+    const lista = el("div"); lista.style.marginTop = "8px";
     o.lineas.slice().sort((a,b) => b.fecha.localeCompare(a.fecha)).forEach(r => {
-      const d = document.createElement("div");
-      d.innerHTML = `<span>${fmtFecha(r.fecha)}${r.fija ? "" : " · " + r.t}</span><span>${r.min} min · ${r.res}</span>`;
-      lista.appendChild(d);
+      const d = el("div", "linea");
+      d.innerHTML = `<span>${fmtFecha(r.fecha)}${r.fija ? "" : " · " + esc(r.t)}</span><span class="dcha">${r.min} min · ${esc(r.res)}</span>`;
+      const x = el("button", "x", "×"); x.setAttribute("aria-label", "Borrar esta tanda del registro");
+      x.onclick = e => { e.stopPropagation(); accion("Tanda borrada del registro", () => { const k = S.reg.indexOf(r); if(k >= 0) S.reg.splice(k, 1); }); };
+      d.append(x); lista.appendChild(d);
     });
     det.appendChild(lista);
     f.append(cab, sub, barra, det); cont.appendChild(f);
   };
 
   pintarMesActual();
-  const cf = document.getElementById("tot-fijas"); cf.innerHTML = "";
-  FIJAS.map(f => porTarea[f[0]] || {t:f[0], veces:0, min:0, ult:null, lineas:[]})
+  const NF = nombresFijas();
+  const cf = $("tot-fijas"); cf.innerHTML = "";
+  NF.actuales.map(t => porTarea[t] || vacio(t)).concat(NF.antiguas.map(t => porTarea[t]))
     .sort((a,b) => b.min - a.min)
-    .forEach(o => bloque(o, cf, o.t));
-  const cs = document.getElementById("tot-sueltas"); cs.innerHTML = "";
-  bloque(porTarea["__sueltas"] || {t:"__sueltas", veces:0, min:0, ult:null, lineas:[]}, cs, "Todas las sueltas");
+    .forEach(o => bloque(o, cf, o.t, NF.antiguas.includes(o.t)));
+  if(!cf.children.length) cf.innerHTML = `<div class="pie">No hay tareas fijas.</div>`;
+  const cs = $("tot-sueltas"); cs.innerHTML = "";
+  bloque(porTarea["__sueltas"] || vacio("__sueltas"), cs, "Todas las sueltas");
   pintarMapa(); pintarCurio();
 
   const total = S.reg.reduce((a,r) => a + r.min, 0);
-  document.getElementById("resumen").textContent =
+  $("resumen").textContent =
     S.reg.length ? `${S.reg.length} tandas en total · ${fmtMin(total)} de casa` : "El registro se llena solo con cada tanda que cierres.";
 }
 
@@ -529,51 +1223,88 @@ function apuntar(tarea, minutos, res){
   S.reg.push({ t:tarea.t, fija:!!tarea.fija, fecha:new Date().toISOString(), min:Math.max(1, minutos), res });
 }
 
-/* ---------- exportar / importar ---------- */
+/* ---------- copia de seguridad (CSV) ---------- */
+function infoCopia(){
+  if(!S.ultCopia) return "Aún no has guardado ninguna copia.";
+  const d = Math.floor((Date.now() - S.ultCopia)/DIA);
+  return d <= 0 ? "Última copia: hoy." : d === 1 ? "Última copia: ayer." : `Última copia: hace ${d} días.`;
+}
+function pintarAvisoCopia(){
+  let mostrar = false;
+  if(S.reg.length >= 5){
+    const base = S.ultCopia || S.reg.reduce((m, r) => Math.min(m, +new Date(r.fecha) || m), Date.now());
+    mostrar = Date.now() - base >= 30*DIA && Date.now() >= (S.copiaLuego || 0);
+  }
+  $("aviso-copia").hidden = !mostrar;
+  if(mostrar) $("aviso-copia-txt").textContent = S.ultCopia
+    ? `La última es de hace ${Math.floor((Date.now() - S.ultCopia)/DIA)} días.`
+    : "Todavía no has guardado ninguna. Si se borran los datos del navegador o cambias de móvil, el registro se perdería.";
+  $("copia-info").textContent = infoCopia() + " La copia es un archivo que puedes guardar en Archivos, en Drive o mandártelo a ti mismo.";
+}
 function exportar(){
-  const cab = "clase;fecha;tarea;tipo;minutos;resultado;peso;hecha;a_medias";
-  const filas = S.reg.map(r => ["registro", r.fecha, r.t.replace(/;/g,","), r.fija ? "fija" : "suelta", r.min, r.res, "", "", ""].join(";"));
-  const tareas = S.tareas.map(x => ["tarea", "", x.t.replace(/;/g,","), x.fija ? "fija" : "suelta", "", "", x.peso, x.hecha ? "sí" : "no", x.medias ? "sí" : "no"].join(";"));
-  const csv = "\ufeff" + [cab, ...filas, ...tareas].join("\n");
+  const cab = "clase;fecha;tarea;tipo;minutos;resultado;peso;hecha;a_medias;cada_dias;hecha_en;tanda_min";
+  const L = s => String(s).replace(/[;\r\n]+/g, ",");
+  const filas = S.reg.map(r => ["registro", r.fecha, L(r.t), r.fija ? "fija" : "suelta", r.min, L(r.res), "", "", "", "", "", ""].join(";"));
+  const tareas = S.tareas.map(x => ["tarea", "", L(x.t), x.fija ? "fija" : "suelta", "", "", x.peso, x.hecha ? "sí" : "no", x.medias ? "sí" : "no",
+    x.fija ? (x.cada || 0) : "", x.hechaEn ? new Date(x.hechaEn).toISOString() : "", x.min || ""].join(";"));
+  const conf = [["tanda", S.cfg.tanda], ["descanso", S.cfg.descanso]].map(([k, v]) => ["config", "", k, "", v, "", "", "", "", "", "", ""].join(";"));
+  const csv = "﻿" + [cab, ...filas, ...tareas, ...conf].join("\n");
   const nombre = "ruleta-tareas-" + new Date().toISOString().slice(0,10) + ".csv";
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const file = new File([blob], nombre, {type:"text/csv"});
-  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-    navigator.share({files:[file]}).catch(() => {});
-    return;
-  }
+  const hecho = () => { S.ultCopia = Date.now(); S.copiaLuego = 0; guardar(); pintarAvisoCopia(); toast("Copia guardada"); };
+  try{
+    const file = new File([blob], nombre, {type:"text/csv"});
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      navigator.share({files:[file]}).then(hecho).catch(() => {});
+      return;
+    }
+  }catch(e){}
   const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = nombre;
   document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  hecho();
 }
 function importar(texto){
-  const lineas = texto.replace(/^\ufeff/,"").split(/\r?\n/).filter(Boolean);
+  const lineas = texto.replace(/^﻿/, "").split(/\r?\n/).filter(l => l.trim());
+  if(lineas.length < 2){ toast("Ese archivo no trae nada que recuperar"); return; }
   const nuevo = /^clase;/.test(lineas[0]);
-  let n = 0, nt = 0;
+  const f = foto();
+  let n = 0, nt = 0, nc = 0;
   lineas.slice(1).forEach(l => {
-    const c = l.split(";");
+    const c = l.split(";").map(v => v.trim());
     const fila = nuevo ? c : ["registro", ...c];
-    const [clase, fecha, t, tipo, min, res, peso, hecha, medias] = fila;
+    const [clase, fecha, t, tipo, min, res, peso, hecha, medias, cada, hechaEn, tmin] = fila;
     if(clase === "registro"){
-      if(!fecha || !t || isNaN(+min)) return;
+      if(!fecha || !t || !min || isNaN(+min) || isNaN(+new Date(fecha))) return;
       if(S.reg.some(r => r.fecha === fecha && r.t === t)) return;
-      S.reg.push({ t, fija: tipo === "fija", fecha, min:+min, res: res || "terminada" }); n++;
+      S.reg.push({ t, fija: tipo === "fija", fecha, min: Math.max(1, Math.round(+min)), res: res || "terminada" }); n++;
     }else if(clase === "tarea" && t){
       let x = S.tareas.find(y => y.t === t);
-      if(!x){ x = { t, peso:1, hecha:false, medias:false, fija: tipo === "fija" }; S.tareas.push(x); }
-      if(peso) x.peso = Math.min(5, Math.max(1, +peso || 1));
-      x.hecha = hecha === "sí"; x.medias = medias === "sí"; nt++;
+      if(!x){ x = { id:nuevoId(), t, peso:1, hecha:false, medias:false, fija: tipo === "fija", min:0 }; S.tareas.push(x); }
+      if(tipo === "fija" || tipo === "suelta") x.fija = tipo === "fija";
+      if(peso) x.peso = Math.min(5, Math.max(1, Math.round(+peso) || 1));
+      x.hecha = hecha === "sí"; x.medias = medias === "sí";
+      if(x.fija){
+        if(cada && !isNaN(+cada)) x.cada = Math.max(0, Math.round(+cada));
+        else if(typeof x.cada !== "number") x.cada = CADA_DEF;
+        const he = hechaEn ? +new Date(hechaEn) : NaN;
+        x.hechaEn = x.hecha ? (isNaN(he) ? Date.now() : he) : null;
+      }else{ x.hecha = false; x.hechaEn = null; }
+      if(tmin && !isNaN(+tmin)) x.min = Math.max(0, Math.round(+tmin));
+      nt++;
+    }else if(clase === "config" && (t === "tanda" || t === "descanso") && +min > 0){
+      S.cfg[t] = Math.min(t === "tanda" ? 120 : 60, Math.max(1, Math.round(+min))); nc++;
     }
   });
+  revisarVueltas(true);
   guardar(); pintar();
   const partes = [];
   if(n) partes.push(`${n} tanda${n>1?"s":""}`);
   if(nt) partes.push(`${nt} tarea${nt>1?"s":""}`);
-  aviso(partes.length ? partes.join(" y ") + " importadas." : "Nada nuevo que importar.");
+  if(partes.length || nc) toast(partes.length ? `Recuperadas ${partes.join(" y ")}` : "Ajustes recuperados", deshacerDe(f), 9000);
+  else toast("No había nada nuevo en esa copia");
 }
-function aviso(msg){
-  const r = document.getElementById("resumen"); const prev = r.textContent;
-  r.textContent = msg; setTimeout(() => pintarRegistro(), 2500);
-}
+function pedirPersistencia(){ try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); }catch(e){} }
 
 /* ---------- audio ----------
    iOS congela el código de una web al bloquear la pantalla, pero deja sonar lo que ya
@@ -621,7 +1352,7 @@ function sonar(segSilencio, segAlarma, titulo){
     }
   }catch(e){}
 }
-const tituloReloj = () => S.T ? (S.T.tipo === "tarea" && S.tareas[S.T.idx] ? S.tareas[S.T.idx].t : "Descanso") : "";
+const tituloReloj = () => { if(!S.T) return ""; const x = S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null; return x ? x.t : "Descanso"; };
 function audioVivo(){ if(S.T && !S.T.pausa) sonar(resta(), 60, tituloReloj()); }
 function alarma(){
   // la pista ya lleva la alarma dentro; solo si el audio no está sonando (app recién abierta) se lanza suelta
@@ -641,16 +1372,16 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "1.5";
+const VERSION = "2.0";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
     if(!r.ok) return;
     const m = (await r.text()).match(/class="ver">v([\d.]+)</);
-    if(m && m[1] !== VERSION) document.getElementById("nueva-version").classList.add("on");
+    if(m && m[1] !== VERSION) $("nueva-version").classList.add("on");
   }catch(e){}
 }
-document.getElementById("recargar").onclick = async () => {
+$("recargar").onclick = async () => {
   try{ if("serviceWorker" in navigator){ const rs = await navigator.serviceWorker.getRegistrations(); await Promise.all(rs.map(x => x.update())); } }catch(e){}
   location.reload();
 };
@@ -667,31 +1398,35 @@ function avisar(titulo, cuerpo){
 
 /* ---------- relojes ---------- */
 const resta = () => !S.T ? 0 : (S.T.pausa ? S.T.pausado : Math.max(0, Math.round((S.T.fin - Date.now())/1000)));
-const salida = () => document.getElementById("salida");
+const salida = () => $("salida");
+const NUM = {5:"Cinco", 10:"Diez", 15:"Quince", 20:"Veinte", 25:"Veinticinco", 30:"Treinta", 35:"Treinta y cinco", 40:"Cuarenta"};
 
-function arrancar(tipo, segs, idx, vuelta){
-  if(tipo === "tarea"){ S.bloque = null; pedirPermiso(); }
-  S.T = { tipo, total:segs, fin: Date.now() + segs*1000, pausa:false, pausado:segs, idx, vuelta, sonado:false };
+function arrancar(tipo, segs, id, vuelta){
+  if(tipo === "tarea"){ S.bloque = null; pedirPermiso(); pedirPersistencia(); }
+  premioId = null; firmaReloj = "";
+  S.T = { tipo, total:segs, fin: Date.now() + segs*1000, pausa:false, pausado:segs, id:id || null, vuelta:vuelta || null, sonado:false };
   audioVivo();
   guardar(); despierto(true); latir(); pintar();
 }
-function parar(){ audioParar(); S.T = null; guardar(); clearInterval(tic); tic = null; despierto(false); salida().innerHTML = ""; pintar(); }
-
-/* la tarea que dejaste a medias antes del descanso, si sigue en la rueda */
-const tareaVuelta = () => S.T && S.T.tipo === "descanso" && S.T.vuelta
-  ? S.tareas.find(x => !x.hecha && x.t === S.T.vuelta) || null : null;
-function volverA(tarea){ pararAlarma(); arrancar("tarea", TANDA, S.tareas.indexOf(tarea)); }
-function tarjetaVuelta(tarea){
-  const c = document.createElement("div"); c.className = "tarjeta";
-  c.innerHTML = `<div class="rot">¿Sigues con lo de antes?</div><div class="que">${tarea.t}</div>
-    <div class="det">Otra tanda de 15 min, o gira la ruleta.</div>`;
-  const b = document.createElement("div"); b.className = "btns";
-  const v = document.createElement("button"); v.className = "b-acc"; v.textContent = "Volver a " + tarea.t;
-  v.onclick = () => volverA(tarea);
-  const r = document.createElement("button"); r.textContent = "A la ruleta";
-  r.onclick = () => { salida().innerHTML = ""; };
-  b.append(v, r); c.append(b);
-  salida().innerHTML = ""; salida().appendChild(c);
+function parar(){
+  audioParar(); S.T = null; guardar(); clearInterval(tic); tic = null; despierto(false);
+  firmaReloj = ""; document.title = "Ruleta de tareas";
+  salida().innerHTML = ""; pintar();
+}
+function alargar(seg){
+  if(!S.T) return;
+  const r = resta();
+  S.T.total += seg; S.T.sonado = false;
+  if(S.T.pausa) S.T.pausado = r + seg;
+  else S.T.fin = Date.now() + (r + seg)*1000;
+  pararAlarma(); audioVivo();
+  guardar(); latir();
+}
+function pausar(){
+  if(!S.T) return;
+  if(S.T.pausa){ S.T.fin = Date.now() + S.T.pausado*1000; S.T.pausa = false; audioVivo(); }
+  else { S.T.pausado = resta(); S.T.pausa = true; pararAlarma(); }
+  guardar(); pintarReloj();
 }
 
 /* pantalla encendida mientras corre un reloj */
@@ -705,15 +1440,35 @@ async function despierto(on){
   }catch(e){ wl = null; }
 }
 
+/* la tarea que dejaste a medias antes del descanso, si sigue en la rueda */
+const tareaVuelta = () => {
+  if(!S.T || S.T.tipo !== "descanso" || !S.T.vuelta) return null;
+  const x = tareaPorId(S.T.vuelta); return x && !x.hecha ? x : null;
+};
+function volverA(tarea){ pararAlarma(); arrancar("tarea", durTarea(tarea), tarea.id); }
+function tarjetaVuelta(tarea){
+  const id = tarea.id;
+  const c = el("div", "tarjeta entra");
+  c.innerHTML = `<div class="rot">¿Sigues con lo de antes?</div><div class="que">${esc(tarea.t)}</div>
+    <div class="det">Otra tanda de ${fmtSeg(durTarea(tarea))}, o gira la ruleta.</div>`;
+  const b = el("div", "btns");
+  b.append(boton("Volver a " + tarea.t, "b-acc", () => {
+    const x = tareaPorId(id);
+    if(x && !x.hecha) volverA(x); else { salida().innerHTML = ""; toast("Esa tarea ya no está en la rueda"); }
+  }, ICON.play));
+  b.append(boton("A la ruleta", "", () => { salida().innerHTML = ""; }));
+  c.append(b);
+  salida().innerHTML = ""; salida().appendChild(c);
+}
 function tarjetaBloque(){
-  const c = document.createElement("div"); c.className = "tarjeta";
+  if(!S.bloque || !pend().length) return;
+  const c = el("div", "tarjeta entra");
   c.innerHTML = `<div class="rot">Bloque a medio gastar</div>
     <div class="que">Te quedan ${fmtSeg(S.bloque.seg)}</div>
     <div class="det">Sin descanso: gira y la siguiente arranca con lo que queda.</div>`;
-  const b = document.createElement("div"); b.className = "btns";
-  const g = document.createElement("button"); g.className = "b-acc"; g.textContent = "Girar";
-  g.onclick = girar;
-  b.append(g); c.append(b);
+  const b = el("div", "btns");
+  b.append(boton("Girar", "b-acc", girar));
+  c.append(b);
   salida().innerHTML = ""; salida().appendChild(c);
 }
 
@@ -723,140 +1478,162 @@ function latir(){
     if(!S.T){ clearInterval(tic); return; }
     if(!S.T.sonado && !S.T.pausa && resta() === 0){
       S.T.sonado = true; guardar(); alarma();
-      const tarea = S.T.tipo === "tarea" ? S.tareas[S.T.idx] : null, vt = tareaVuelta();
+      const tarea = S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null, vt = tareaVuelta();
       avisar(tarea ? "Se acabó la tanda" : "Se acabó el descanso",
-        tarea ? tarea.t + " · Terminada o a medias" : vt ? "Vuelve a " + vt.t + " o a la ruleta" : "Vuelve a la ruleta");
+        tarea ? tarea.t + " · Terminada, a medias o 5 minutos más" : vt ? "Vuelve a " + vt.t + " o a la ruleta" : "Vuelve a la ruleta");
     }
     pintarReloj();
   }, 400);
   pintarReloj();
 }
 
-function girar(){
-  const P = pend();
-  if(girando || !P.length || S.T) return;
-  girando = true; salida().innerHTML = ""; pintarListas();
-  try{ AC = AC || new (window.AudioContext || window.webkitAudioContext)(); AC.resume(); }catch(e){}
-  const total = P.reduce((a,x) => a + pesoReal(x), 0);
-  let r = Math.random()*total, acum = 0, i = 0, a0 = 0, seg = 0;
-  for(let k = 0; k < P.length; k++){
-    if(r < acum + pesoReal(P[k])){ i = k; a0 = 360*acum/total; seg = 360*pesoReal(P[k])/total; break; }
-    acum += pesoReal(P[k]);
-  }
-  const centro = a0 + seg/2 + (Math.random()-.5)*seg*.55;
-  rot += (((360 - centro % 360) % 360 - (rot % 360)) + 360) % 360 + 360*5;
-  document.getElementById("giro").style.transform = `rotate(${rot}deg)`;
-  setTimeout(() => {
-    girando = false;
-    const t = P[i];
-    const c = document.createElement("div"); c.className = "tarjeta";
-    const dur = S.bloque ? S.bloque.seg : TANDA;
-    c.innerHTML = `<div class="rot">Te toca</div><div class="que">${t.t}</div>
-      <div class="det">${t.medias ? "La tenías a medias · " : ""}${S.bloque ? "lo que queda del bloque: " + fmtSeg(dur) : "tanda de 15 min"}</div>`;
-    const b = document.createElement("div"); b.className = "btns";
-    const ir = document.createElement("button"); ir.className = "b-acc"; ir.textContent = "Empezar";
-    ir.onclick = () => arrancar("tarea", dur, S.tareas.indexOf(t));
-    const otra = document.createElement("button"); otra.textContent = "Otra";
-    otra.onclick = () => { salida().innerHTML = ""; girar(); };
-    b.append(ir, otra); c.append(b);
-    salida().appendChild(c);
-    pintarListas();
-  }, 4700);
+function cerrarActual(res){
+  const t = S.T && S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null;
+  if(t) cerrarTanda(t, res); else parar();
 }
-
 function cerrarTanda(tarea, res){
   pararAlarma();
   const sobra = resta();
   const usados = Math.round((S.T.total - sobra)/60);
   apuntar(tarea, usados, res);
-  if(res === "terminada") marcarHecha(tarea);
-  else { tarea.medias = true; guardar(); }
+  if(res === "terminada"){ completar(tarea); celebrar(!pend().length); }
+  else tarea.medias = true;
   if(sobra > 0){
-    S.bloque = { seg: sobra, desde: Date.now() };
-    S.T = null; clearInterval(tic); tic = null; audioParar(); guardar();
-    tarjetaBloque(); pintar();
+    S.bloque = pend().length ? { seg: sobra, desde: Date.now() } : null;
+    S.T = null; clearInterval(tic); tic = null; audioParar(); despierto(false);
+    firmaReloj = ""; document.title = "Ruleta de tareas";
+    guardar(); salida().innerHTML = ""; pintar(); tarjetaBloque();
   }else{
-    arrancar("descanso", DESCANSO, undefined, res === "a medias" ? tarea.t : undefined);
+    arrancar("descanso", durDescanso(), null, res === "a medias" ? tarea.id : null);
   }
 }
 
+function construirReloj(tarea, vt, fin, s){
+  const c = el("div", "tarjeta reloj-card" + (tarea ? "" : " desc-card"));
+  const totMin = Math.round(S.T.total/60);
+  const rotulo = tarea ? (fin ? "Se acabó la tanda" : S.T.pausa ? "En pausa" : "En faena") : (fin ? "Se acabó el descanso" : "Descanso");
+  const que = tarea ? esc(tarea.t) : `${NUM[totMin] || totMin} minutos tuyos`;
+  const sub = fin ? (tarea ? "¡tiempo!" : "¡a por ello!") : S.T.pausa ? "en pausa" : `de ${totMin} min`;
+  const off = fin ? 0 : CIRC*(1 - s/S.T.total);
+  c.innerHTML = `<div class="rot">${rotulo}</div><div class="que">${que}</div>
+    <div class="anillo"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="pista" cx="60" cy="60" r="54"/>`
+    + `<circle class="prog" cx="60" cy="60" r="54" style="stroke-dasharray:${CIRC.toFixed(2)}; stroke-dashoffset:${off.toFixed(2)}"/></svg>`
+    + `<div class="centro"><div id="reloj"></div><div class="de">${sub}</div></div></div>`
+    + (vt && !fin ? `<div class="det">Luego puedes volver a ${esc(vt.t)}</div>` : "");
+  const b = el("div", "btns");
+  if(tarea){
+    b.append(boton("Terminada", "b-ok", () => cerrarActual("terminada"), ICON.check));
+    b.append(boton("A medias", "b-med", () => cerrarActual("a medias")));
+    if(fin) b.append(boton("+5 min", "", () => alargar(300)));
+    else b.append(boton(S.T.pausa ? "Seguir" : "Pausa", "", pausar));
+  }else{
+    if(fin && vt){
+      const id = vt.id;
+      b.append(boton("Volver a " + vt.t, "b-acc", () => { const x = tareaPorId(id); if(x && !x.hecha) volverA(x); else parar(); }, ICON.play));
+    }
+    b.append(boton(fin ? (vt ? "A la ruleta" : "Volver a la ruleta") : "Saltar el descanso", fin && !vt ? "b-acc" : "", () => {
+      const v = tareaVuelta(); parar(); if(!fin && v) tarjetaVuelta(v);
+    }));
+    b.append(boton("+5 min", "", () => alargar(300)));
+  }
+  c.append(b);
+  return c;
+}
 function pintarReloj(){
   if(!S.T) return;
   const s = resta(), fin = s === 0;
-  const mm = String(Math.floor(s/60)).padStart(2,"0"), ss = String(s%60).padStart(2,"0");
-  const tarea = S.T.tipo === "tarea" ? S.tareas[S.T.idx] : null;
+  const tarea = S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null;
   if(S.T.tipo === "tarea" && !tarea){ parar(); return; }
   const vt = tarea ? null : tareaVuelta();
-  const c = document.createElement("div"); c.className = "tarjeta" + (tarea ? "" : " desc-card");
-  c.innerHTML = `<div class="rot">${tarea ? (fin ? "Se acabó la tanda" : "En faena") : (fin ? "Se acabó el descanso" : "Descanso")}</div>
-    <div class="que">${tarea ? tarea.t : "Quince minutos tuyos"}</div>
-    <div id="reloj" class="${fin ? "fin" : (s <= 60 ? "poco" : "")}">${mm}:${ss}</div>
-    ${vt && !fin ? `<div class="det">Luego puedes volver a ${vt.t}</div>` : ""}`;
-  const b = document.createElement("div"); b.className = "btns";
-  if(tarea){
-    const ok = document.createElement("button"); ok.className = "b-ok"; ok.textContent = "Terminada";
-    ok.onclick = () => cerrarTanda(tarea, "terminada");
-    const me = document.createElement("button"); me.className = "b-med"; me.textContent = "A medias";
-    me.onclick = () => cerrarTanda(tarea, "a medias");
-    b.append(ok, me);
-    if(!fin){
-      const pa = document.createElement("button"); pa.textContent = S.T.pausa ? "Seguir" : "Pausa";
-      pa.onclick = () => {
-        if(S.T.pausa){ S.T.fin = Date.now() + S.T.pausado*1000; S.T.pausa = false; audioVivo(); }
-        else { S.T.pausado = resta(); S.T.pausa = true; pararAlarma(); }
-        guardar(); pintarReloj();
-      };
-      b.append(pa);
-    }
-  }else{
-    if(fin && vt){
-      const vu = document.createElement("button"); vu.className = "b-acc"; vu.textContent = "Volver a " + vt.t;
-      vu.onclick = () => volverA(vt);
-      b.append(vu);
-    }
-    const v = document.createElement("button"); v.className = fin && !vt ? "b-acc" : "";
-    v.textContent = fin ? (vt ? "A la ruleta" : "Volver a la ruleta") : "Saltar el descanso";
-    v.onclick = () => { parar(); if(!fin && vt) tarjetaVuelta(vt); };
-    const mas = document.createElement("button"); mas.textContent = "+5 min";
-    mas.onclick = () => arrancar("descanso", resta() + 300, undefined, S.T.vuelta);
-    b.append(v, mas);
+  const firma = [S.T.tipo, fin, S.T.pausa, tarea ? tarea.id + tarea.t : "", vt ? vt.id + vt.t : "", S.T.total].join("|");
+  let c = salida().querySelector(".reloj-card");
+  if(!c || firma !== firmaReloj){
+    const nueva = !c;
+    firmaReloj = firma;
+    c = construirReloj(tarea, vt, fin, s);
+    if(nueva) c.classList.add("entra");
+    salida().innerHTML = ""; salida().appendChild(c);
   }
-  c.append(b);
-  salida().innerHTML = ""; salida().appendChild(c);
+  const mm = String(Math.floor(s/60)).padStart(2,"0"), ss = String(s%60).padStart(2,"0");
+  const rl = c.querySelector("#reloj");
+  rl.textContent = `${mm}:${ss}`; rl.className = fin ? "fin" : (s <= 60 ? "poco" : "");
+  const an = c.querySelector(".anillo");
+  an.classList.toggle("poco", !fin && s <= 60 && !S.T.pausa); an.classList.toggle("fin", fin); an.classList.toggle("pausa", !!S.T.pausa);
+  c.querySelector(".prog").style.strokeDashoffset = (fin ? 0 : CIRC*(1 - s/S.T.total)).toFixed(2);
+  document.title = fin ? "¡Tiempo! · Ruleta de tareas" : `${mm}:${ss} · ${tarea ? tarea.t : "Descanso"}`;
+}
+
+/* ---------- añadir ---------- */
+function abrirAlta(){
+  $("alta").classList.add("abierta"); $("mas").classList.add("abierto"); $("mas").setAttribute("aria-expanded", "true");
+  $("nueva").focus();
+}
+function cerrarAlta(){
+  $("alta").classList.remove("abierta"); $("mas").classList.remove("abierto"); $("mas").setAttribute("aria-expanded", "false");
+}
+function ponerTipoAlta(t){
+  tipoAlta = t;
+  document.querySelectorAll("#alta-tipo button").forEach(b => { const on = b.dataset.tipo === t; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+  $("alta-ayuda").textContent = t === "fija" ? "Fija: cuando la terminas, vuelve sola a la rueda (cada semana; luego lo puedes cambiar)." : "Suelta: se hace una vez y desaparece de la rueda.";
+}
+function anadir(){
+  const i = $("nueva"), v = i.value.trim();
+  if(!v){ i.focus(); return; }
+  if(existeNombre(v)){ toast("Ya hay una tarea con ese nombre"); i.select(); return; }
+  const x = { id:nuevoId(), t:v, peso:1, hecha:false, medias:false, fija: tipoAlta === "fija", min:0 };
+  if(x.fija){ x.cada = CADA_DEF; x.hechaEn = null; }
+  S.tareas.push(x); i.value = ""; guardar(); pintar();
+  cerrarAlta(); i.blur();
+  toast(x.fija ? `«${v}» añadida a las fijas` : `«${v}» añadida a la rueda`);
+  const li = document.querySelector(`.tarea[data-id="${x.id}"]`);
+  if(li){ li.classList.add("nueva"); try{ li.scrollIntoView({block:"nearest", behavior: reduceMov() ? "auto" : "smooth"}); }catch(e){} }
 }
 
 /* ---------- eventos ---------- */
-document.getElementById("mas").onclick = () => {
-  const a = document.getElementById("alta");
-  a.classList.toggle("abierta");
-  if(a.classList.contains("abierta")) document.getElementById("nueva").focus();
-};
-document.getElementById("add").onclick = () => {
-  const i = document.getElementById("nueva"), v = i.value.trim();
-  if(!v) return;
-  S.tareas.push({t:v, peso:1, hecha:false, medias:false, fija:false});
-  i.value = ""; guardar(); pintar();
-  document.getElementById("alta").classList.remove("abierta");
-};
-document.getElementById("nueva").addEventListener("keydown", e => { if(e.key === "Enter") document.getElementById("add").click(); });
-document.getElementById("girar").onclick = girar;
+$("mas").onclick = () => { if($("alta").classList.contains("abierta")) cerrarAlta(); else abrirAlta(); };
+$("add").onclick = anadir;
+$("nueva").addEventListener("keydown", e => { if(e.key === "Enter") anadir(); if(e.key === "Escape") cerrarAlta(); });
+document.querySelectorAll("#alta-tipo button").forEach(b => b.onclick = () => ponerTipoAlta(b.dataset.tipo));
+$("ajustes").onclick = ajustes;
+$("girar").onclick = girar;
+$("caja").onclick = () => { if(!$("girar").disabled) girar(); };
+$("caja").addEventListener("keydown", e => { if((e.key === "Enter" || e.key === " ") && !$("girar").disabled){ e.preventDefault(); girar(); } });
+$("devolver-todas").onclick = devolverTodas;
+$("toast-btn").onclick = () => { const f = toastDeshacer; cerrarToast(); if(f) f(); };
+$("velo").onclick = () => cerrarHoja();
+document.addEventListener("keydown", e => { if(e.key === "Escape") cerrarHoja(); });
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => {
+  if(b.classList.contains("on")) return;
   document.querySelectorAll(".tabs button").forEach(x => x.classList.toggle("on", x === b));
   document.querySelectorAll(".vista").forEach(v => v.classList.toggle("on", v.id === "v-" + b.dataset.v));
+  $("tabs").dataset.on = b.dataset.v;
+  if(b.dataset.v === "registro"){ const r = $("v-registro"); r.classList.add("anim"); setTimeout(() => r.classList.remove("anim"), 1000); }
 });
-document.getElementById("exportar").onclick = exportar;
-document.getElementById("importar").onclick = () => document.getElementById("fichero").click();
-document.getElementById("fichero").onchange = e => {
+$("exportar").onclick = exportar;
+$("importar").onclick = () => $("fichero").click();
+$("fichero").onchange = e => {
   const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader(); r.onload = () => importar(r.result); r.readAsText(f, "utf-8");
+  const r = new FileReader(); r.onload = () => { cerrarHoja(true); importar(String(r.result)); }; r.readAsText(f, "utf-8");
   e.target.value = "";
 };
-document.addEventListener("visibilitychange", () => { if(!document.hidden){ comprobarVersion(); if(S.T){ pintarReloj(); despierto(true); } } });
+$("copia-si").onclick = exportar;
+$("copia-luego").onclick = () => { S.copiaLuego = Date.now() + 7*DIA; guardar(); pintarAvisoCopia(); };
+document.addEventListener("visibilitychange", () => {
+  if(document.hidden) return;
+  comprobarVersion(); revisarVueltas(); pintarListas(); pintarAvisoCopia();
+  if(S.T){ pintarReloj(); despierto(true); }
+});
+try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", aplicarTema); }catch(e){}
 
 cargar();
+aplicarTema();
+construirLuces();
 pintar();
 if(S.T) latir();
 else if(S.bloque) tarjetaBloque();
+$("pista").hidden = !!S.cfg.pistaVista;
+revisarVueltas();
+setInterval(() => { if(!document.hidden) revisarVueltas(); }, 60000);
 </script>
 </body>
 </html>
