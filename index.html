@@ -147,7 +147,7 @@
 <body>
 
 <div class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v1.4</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v1.5</div></div>
   <button id="mas" title="Añadir una suelta">+</button>
 </div>
 <div id="nueva-version"><span>Hay una versión nueva de la app.</span><button class="b-acc" id="recargar">Actualizar</button></div>
@@ -641,7 +641,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "1.4";
+const VERSION = "1.5";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
@@ -669,13 +669,30 @@ function avisar(titulo, cuerpo){
 const resta = () => !S.T ? 0 : (S.T.pausa ? S.T.pausado : Math.max(0, Math.round((S.T.fin - Date.now())/1000)));
 const salida = () => document.getElementById("salida");
 
-function arrancar(tipo, segs, idx){
+function arrancar(tipo, segs, idx, vuelta){
   if(tipo === "tarea"){ S.bloque = null; pedirPermiso(); }
-  S.T = { tipo, total:segs, fin: Date.now() + segs*1000, pausa:false, pausado:segs, idx, sonado:false };
+  S.T = { tipo, total:segs, fin: Date.now() + segs*1000, pausa:false, pausado:segs, idx, vuelta, sonado:false };
   audioVivo();
   guardar(); despierto(true); latir(); pintar();
 }
 function parar(){ audioParar(); S.T = null; guardar(); clearInterval(tic); tic = null; despierto(false); salida().innerHTML = ""; pintar(); }
+
+/* la tarea que dejaste a medias antes del descanso, si sigue en la rueda */
+const tareaVuelta = () => S.T && S.T.tipo === "descanso" && S.T.vuelta
+  ? S.tareas.find(x => !x.hecha && x.t === S.T.vuelta) || null : null;
+function volverA(tarea){ pararAlarma(); arrancar("tarea", TANDA, S.tareas.indexOf(tarea)); }
+function tarjetaVuelta(tarea){
+  const c = document.createElement("div"); c.className = "tarjeta";
+  c.innerHTML = `<div class="rot">¿Sigues con lo de antes?</div><div class="que">${tarea.t}</div>
+    <div class="det">Otra tanda de 15 min, o gira la ruleta.</div>`;
+  const b = document.createElement("div"); b.className = "btns";
+  const v = document.createElement("button"); v.className = "b-acc"; v.textContent = "Volver a " + tarea.t;
+  v.onclick = () => volverA(tarea);
+  const r = document.createElement("button"); r.textContent = "A la ruleta";
+  r.onclick = () => { salida().innerHTML = ""; };
+  b.append(v, r); c.append(b);
+  salida().innerHTML = ""; salida().appendChild(c);
+}
 
 /* pantalla encendida mientras corre un reloj */
 let wl = null;
@@ -706,8 +723,9 @@ function latir(){
     if(!S.T){ clearInterval(tic); return; }
     if(!S.T.sonado && !S.T.pausa && resta() === 0){
       S.T.sonado = true; guardar(); alarma();
-      const tarea = S.T.tipo === "tarea" ? S.tareas[S.T.idx] : null;
-      avisar(tarea ? "Se acabó la tanda" : "Se acabó el descanso", tarea ? tarea.t + " · Terminada o a medias" : "Vuelve a la ruleta");
+      const tarea = S.T.tipo === "tarea" ? S.tareas[S.T.idx] : null, vt = tareaVuelta();
+      avisar(tarea ? "Se acabó la tanda" : "Se acabó el descanso",
+        tarea ? tarea.t + " · Terminada o a medias" : vt ? "Vuelve a " + vt.t + " o a la ruleta" : "Vuelve a la ruleta");
     }
     pintarReloj();
   }, 400);
@@ -758,7 +776,7 @@ function cerrarTanda(tarea, res){
     S.T = null; clearInterval(tic); tic = null; audioParar(); guardar();
     tarjetaBloque(); pintar();
   }else{
-    arrancar("descanso", DESCANSO);
+    arrancar("descanso", DESCANSO, undefined, res === "a medias" ? tarea.t : undefined);
   }
 }
 
@@ -768,10 +786,12 @@ function pintarReloj(){
   const mm = String(Math.floor(s/60)).padStart(2,"0"), ss = String(s%60).padStart(2,"0");
   const tarea = S.T.tipo === "tarea" ? S.tareas[S.T.idx] : null;
   if(S.T.tipo === "tarea" && !tarea){ parar(); return; }
+  const vt = tarea ? null : tareaVuelta();
   const c = document.createElement("div"); c.className = "tarjeta" + (tarea ? "" : " desc-card");
   c.innerHTML = `<div class="rot">${tarea ? (fin ? "Se acabó la tanda" : "En faena") : (fin ? "Se acabó el descanso" : "Descanso")}</div>
     <div class="que">${tarea ? tarea.t : "Quince minutos tuyos"}</div>
-    <div id="reloj" class="${fin ? "fin" : (s <= 60 ? "poco" : "")}">${mm}:${ss}</div>`;
+    <div id="reloj" class="${fin ? "fin" : (s <= 60 ? "poco" : "")}">${mm}:${ss}</div>
+    ${vt && !fin ? `<div class="det">Luego puedes volver a ${vt.t}</div>` : ""}`;
   const b = document.createElement("div"); b.className = "btns";
   if(tarea){
     const ok = document.createElement("button"); ok.className = "b-ok"; ok.textContent = "Terminada";
@@ -789,10 +809,16 @@ function pintarReloj(){
       b.append(pa);
     }
   }else{
-    const v = document.createElement("button"); v.className = fin ? "b-acc" : "";
-    v.textContent = fin ? "Volver a la ruleta" : "Saltar el descanso"; v.onclick = parar;
+    if(fin && vt){
+      const vu = document.createElement("button"); vu.className = "b-acc"; vu.textContent = "Volver a " + vt.t;
+      vu.onclick = () => volverA(vt);
+      b.append(vu);
+    }
+    const v = document.createElement("button"); v.className = fin && !vt ? "b-acc" : "";
+    v.textContent = fin ? (vt ? "A la ruleta" : "Volver a la ruleta") : "Saltar el descanso";
+    v.onclick = () => { parar(); if(!fin && vt) tarjetaVuelta(vt); };
     const mas = document.createElement("button"); mas.textContent = "+5 min";
-    mas.onclick = () => arrancar("descanso", resta() + 300);
+    mas.onclick = () => arrancar("descanso", resta() + 300, undefined, S.T.vuelta);
     b.append(v, mas);
   }
   c.append(b);
