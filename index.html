@@ -160,7 +160,8 @@
   .tarjeta{max-width:350px; margin:16px auto 0; padding:18px 16px 16px; text-align:center; background:var(--panel);
     border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow)}
   .tarjeta.entra{animation:entra .45s cubic-bezier(.2,.8,.25,1.15)}
-  .tarjeta{scroll-margin:16px 0 calc(24px + env(safe-area-inset-bottom))}
+  .tarjeta{scroll-margin:calc(16px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom))}
+  .wheelbox{scroll-margin-top:calc(26px + env(safe-area-inset-top))}
   @keyframes entra{from{opacity:0; transform:translateY(16px) scale(.96)}}
   .tarjeta .rot{font-size:.74rem; text-transform:uppercase; letter-spacing:.09em; color:var(--soft); font-weight:700}
   .tarjeta .que{font-size:1.4rem; font-weight:800; margin:4px 0; letter-spacing:-.015em;
@@ -207,6 +208,10 @@
   .tarea{display:flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line);
     border-radius:16px; padding:4px 8px 4px 4px; transition:opacity .23s ease, transform .23s ease}
   .tarea.sale{opacity:0; transform:translateX(36px)}
+  /* recién marcada desde la lista: se queda un momento en su sitio, tachada */
+  .tarea.marcada{opacity:.5; pointer-events:none}
+  .tarea.marcada.hecho .nom{text-decoration:line-through}
+  .tarea.marcada .accion{visibility:hidden}
   .tarea.nueva{animation:destella 1.4s ease}
   @keyframes destella{0%,30%{background:var(--acc-suave); border-color:var(--acc)}}
   .tarea .cuerpo{flex:1; min-width:0; display:flex; align-items:center; gap:11px; border:none; background:none;
@@ -242,6 +247,9 @@
   body.con-hoja #toast.on{transform:translate(-50%, 0)}
   #toast-txt{padding:2px 0}
   #toast button{flex:none; background:none; border:none; color:var(--toast-acc); font-weight:700; padding:11px 12px; margin:-8px -4px -8px 0}
+  /* el aviso no se come los toques: solo su botón Deshacer */
+  #toast{pointer-events:none}
+  #toast button{pointer-events:auto}
   #toast i{position:absolute; left:0; bottom:0; width:100%; height:3px; background:var(--toast-acc); opacity:.7;
     transform-origin:left; transform:scaleX(0)}
   #toast i.corre{animation:mengua var(--dur, 6s) linear forwards}
@@ -282,11 +290,17 @@
   .fila-btn button{flex:1 1 auto; min-width:130px; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:600}
   .fila-btn button svg{width:16px; height:16px}
   .listo{width:100%; margin-top:20px; padding:13px; font-weight:700}
+  /* los botones de la hoja siempre a la vista, pegados abajo */
+  .pie-hoja{position:sticky; bottom:calc(-22px - env(safe-area-inset-bottom)); z-index:2; margin:0 -18px calc(-22px - env(safe-area-inset-bottom));
+    padding:12px 18px calc(22px + env(safe-area-inset-bottom)); background:var(--panel); box-shadow:0 -1px 0 var(--line)}
+  .pie-hoja .listo{margin-top:10px}
 
   /* ---------- registro ---------- */
   .tot{display:flex; flex-direction:column; gap:8px}
   .tot .f{background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:11px 13px}
-  .tot .cab2{display:flex; align-items:baseline; gap:8px; cursor:pointer}
+  .tot .f{cursor:pointer}
+  .tot .det2{cursor:auto}
+  .tot .cab2{display:flex; align-items:baseline; gap:8px}
   .tot .cab2 .n{flex:1; font-weight:650; min-width:0; overflow-wrap:anywhere}
   .tot .cab2 .m{font-variant-numeric:tabular-nums; font-weight:750}
   .tot .cab2 .flecha{color:var(--soft); font-size:.8rem; transition:transform .25s}
@@ -347,7 +361,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.1</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.2</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -536,9 +550,10 @@ function cargar(){
   // se guarda ya lo migrado, para que no se rehaga (ni se corra la fecha de vuelta) en cada arranque
   if(p && Array.isArray(p.tareas)) guardar();
 }
-function guardar(){
-  version++;
-  if(toastDeshacer) cerrarToast();   // cualquier cambio posterior retira el «Deshacer» que hubiera pendiente
+function guardar(soloEstado){
+  // un cambio en tareas, registro o ajustes retira el «Deshacer» pendiente;
+  // los de solo estado (el reloj, los avisos) no, porque deshacer no los pisaría
+  if(!soloEstado){ version++; if(toastDeshacer) cerrarToast(); }
   try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(e){}
 }
 
@@ -600,10 +615,10 @@ function deshacerDe(f, v){
     if(version !== v){ toast("Ya no se puede deshacer: ha habido otros cambios después"); return; }
     const p = JSON.parse(f);
     S.tareas = p.tareas; S.reg = p.reg; S.cfg = p.cfg;
-    cerrarHoja(true); guardar(); aplicarTema(); pintar(); toast("Deshecho");
+    cerrarHoja(true); guardar(); aplicarTema(); pintar(); toast("Deshecho");   // pintar() sin argumento recoloca ya las listas
   };
 }
-function accion(msg, fn){ const f = foto(); fn(); guardar(); const v = version; pintar(); toast(msg, deshacerDe(f, v)); bloquear(); }
+function accion(msg, fn, enCadena){ const f = foto(); fn(); guardar(); const v = version; pintar(enCadena); toast(msg, deshacerDe(f, v)); if(!enCadena) bloquear(); }
 
 /* ---------- utilidades de interfaz ---------- */
 function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html != null) e.innerHTML = html; return e; }
@@ -642,10 +657,13 @@ function interruptor(on, cambio, etiqueta){
 }
 
 /* ---------- hoja de abajo ---------- */
-let alCerrar = null;
+let alCerrar = null, abridor = null, abridorId = null;
 function abrirHoja(construir, cerrarCb){
   const h = $("hoja");
   cerrarToast(); bloquear();
+  abridor = document.activeElement;
+  const fila = abridor && abridor.closest ? abridor.closest(".tarea") : null;
+  abridorId = fila ? fila.dataset.id : null;
   construir($("hoja-cont")); alCerrar = cerrarCb || null;
   h.style.transform = ""; h.scrollTop = 0;
   $("velo").classList.add("on"); h.classList.add("on"); h.setAttribute("aria-hidden", "false");
@@ -663,6 +681,10 @@ function cerrarHoja(forzar){
   document.body.classList.remove("con-hoja");
   [...document.body.children].forEach(e => { e.inert = false; });
   if(h.contains(document.activeElement)) document.activeElement.blur();
+  let a = abridor;
+  if(a && !a.isConnected && abridorId) a = document.querySelector(`.tarea[data-id="${sel(abridorId)}"] .cuerpo`);
+  abridor = abridorId = null;
+  if(a && a.isConnected && a !== document.body) try{ a.focus({preventScroll:true}); }catch(e){}
   bloquear();
 }
 (() => {
@@ -697,7 +719,7 @@ function editar(x){
     if(!v || v === y.t){ inp.value = y.t; return; }
     if(existeNombre(v, y)){ toast("Ya hay una tarea con ese nombre"); inp.value = y.t; return; }
     // el historial de otra tarea (p. ej. una fija borrada) no se mezcla con el de esta
-    if(S.reg.some(r => !!r.fija === y.fija && r.t !== y.t && r.t.toLowerCase() === v.toLowerCase())){
+    if(y.fija && S.reg.some(r => r.fija && !r.id && r.t !== y.t && r.t.toLowerCase() === v.toLowerCase())){
       toast("Ese nombre ya sale en el registro de otra tarea; elige otro"); inp.value = y.t; return;
     }
     renombrar(y, v);
@@ -717,7 +739,12 @@ function editar(x){
     f1.append(inp);
 
     const f2 = campo(c, "Tipo");
-    f2.append(segmento([["suelta","Suelta"],["fija","Fija"]], y.fija ? "fija" : "suelta", v => { validar(); cambiarTipo(tareaPorId(id), v === "fija"); pinta(c); }));
+    f2.append(segmento([["suelta","Suelta"],["fija","Fija"]], y.fija ? "fija" : "suelta", v => {
+      validar(); const z = tareaPorId(id); if(!z) return;
+      // tandas antiguas (sin dueño) de otra tarea con este nombre y el otro tipo: se mezclarían para siempre
+      if(S.reg.some(r => !r.id && r.t === z.t && !!r.fija === (v === "fija"))){ toast(`Ya hay tandas antiguas de «${z.t}» como ${v}; cámbiale antes el nombre`); return; }
+      cambiarTipo(z, v === "fija"); pinta(c);
+    }));
     f2.append(el("div", "ayuda", y.fija ? "Cuando la terminas, vuelve sola a la rueda cuando le toca." : "Se hace una vez y desaparece de la rueda."));
 
     if(y.fija){
@@ -737,8 +764,9 @@ function editar(x){
     f4.append(el("div", "ayuda", "Cuanto más peso, más trozo de rueda y más fácil que salga."));
 
     const f5 = campo(c, "Tiempo de tanda");
-    f5.append(stepper([0,5,10,15,20,25,30,40,45,60], y.min || 0, v => v ? v + " min" : `El general (${S.cfg.tanda} min)`,
-      v => { const z = tareaPorId(id); if(z){ z.min = v; guardar(); pintar(); } }));
+    const vals = [...new Set([5,10,15,20,25,30,40,45,60, S.cfg.tanda])].sort((a, b) => a - b);
+    f5.append(stepper(vals, y.min || S.cfg.tanda, v => v + " min" + (v === S.cfg.tanda ? " (el general)" : ""),
+      v => { const z = tareaPorId(id); if(z){ z.min = v === S.cfg.tanda ? 0 : v; guardar(); pintar(); } }));
 
     if(!y.hecha){
       const f6 = el("div", "campo fila-ajuste");
@@ -747,7 +775,7 @@ function editar(x){
       c.append(f6);
     }
 
-    const acc = el("div", "fila-btn");
+    const pie = el("div", "pie-hoja"), acc = el("div", "fila-btn");
     if(y.hecha) acc.append(boton("Volver a la rueda", "", () => { validar(); cerrarHoja(true); const z = tareaPorId(id); if(z) volverRueda(z); }, ICON.volver));
     else if(!enFaena) acc.append(boton("Marcar hecha", "", () => { validar(); cerrarHoja(true); const z = tareaPorId(id); if(z) hechaDesdeLista(z); }, ICON.check));
     const del = boton("Borrar", "b-peligro", () => {
@@ -756,20 +784,22 @@ function editar(x){
       accion(`«${z.t}» borrada`, () => { const k = S.tareas.indexOf(z); if(k >= 0) S.tareas.splice(k, 1); });
     }, ICON.basura);
     del.disabled = !!enFaena;
-    acc.append(del); c.append(acc);
-    if(enFaena) c.append(el("div", "ayuda", "Está en faena: ciérrala desde el reloj para poder borrarla."));
-    c.append(boton("Listo", "b-acc listo", () => cerrarHoja()));
+    acc.append(del); pie.append(acc);
+    if(enFaena) pie.append(el("div", "ayuda", "Está en faena: ciérrala desde el reloj para poder borrarla."));
+    pie.append(boton("Listo", "b-acc listo", () => cerrarHoja()));
+    c.append(pie);
   };
   abrirHoja(pinta, validar);
 }
 function renombrar(x, nuevo){
   const viejo = x.t;
-  S.reg.forEach(r => { if(r.t === viejo && !!r.fija === x.fija) r.t = nuevo; });
+  // las tandas con id son de esta tarea seguro; las antiguas (sin id) se reconocen por el nombre, solo en las fijas
+  S.reg.forEach(r => { if(r.id ? r.id === x.id : (x.fija && r.fija && r.t === viejo)) r.t = nuevo; });
   x.t = nuevo; guardar(); pintar();
 }
 function cambiarTipo(x, fija){
   if(!x || x.fija === fija) return;
-  S.reg.forEach(r => { if(r.t === x.t && !!r.fija === x.fija) r.fija = fija; });
+  S.reg.forEach(r => { if(r.id ? r.id === x.id : (r.t === x.t && !!r.fija === x.fija)) r.fija = fija; });
   x.fija = fija;
   if(fija){ if(typeof x.cada !== "number") x.cada = CADA_DEF; x.hechaEn = x.hecha ? (x.hechaEn || Date.now()) : null; }
   else { x.hecha = false; x.hechaEn = null; }
@@ -797,7 +827,7 @@ function ajustes(){
     fb.append(boton("Guardar copia", "", exportar), boton("Recuperar copia", "", () => $("fichero").click()));
     f5.append(fb);
     f5.append(el("div", "ayuda", esc(infoCopia())));
-    c.append(boton("Listo", "b-acc listo", () => cerrarHoja()));
+    const pie = el("div", "pie-hoja"); pie.append(boton("Listo", "b-acc listo", () => cerrarHoja())); c.append(pie);
   };
   abrirHoja(pinta);
 }
@@ -913,6 +943,7 @@ function girar(){
   if(girando || !P.length || S.T) return;
   girando = true; bloquear(); cerrarAlta(); salida().innerHTML = ""; quitarPremio(); pintarListas();
   audioCtx();
+  try{ $("caja").scrollIntoView({block:"nearest", behavior: reduceMov() ? "auto" : "smooth"}); }catch(e){}
   const disco = $("disco"), aguja = $("aguja"), sobre = $("sobre");
   clearTimeout(recolocar.t); disco.style.transition = "";
   const segs = segmentos(P), total = P.reduce((a,x) => a + pesoReal(x), 0);
@@ -931,7 +962,7 @@ function girar(){
   const fin = () => {
     if(acabado) return; acabado = true;
     rot = hasta; disco.style.transform = `rotate(${rot}deg)`; aguja.style.transform = "";
-    girando = false; ruedaPendiente = false; sobre.classList.remove("girando");
+    girando = false; ruedaPendiente = false; sobre.classList.remove("girando"); bloquear();
     const t = tareaPorId(P[i].id);
     if(!t || t.hecha){ pintar(); return; }
     // pintarRueda recoloca la rueda si la lista cambió mientras giraba y la aguja ya no señala a la ganadora
@@ -1003,26 +1034,27 @@ function completar(x){
   if(x.fija){ x.hecha = true; x.hechaEn = Date.now(); }
   else { const k = S.tareas.indexOf(x); if(k >= 0) S.tareas.splice(k, 1); }
 }
-function salidaAnimada(id, fn){
+// Al marcar desde la lista, la fila se queda un momento en su sitio (tachada): así un segundo toque seguido
+// cae en la fila que estás viendo y no en otra que haya subido. La lista se recoloca cuando dejas de tocar.
+let congelada = 0, recolocarListasT = null;
+function congelarListas(){
+  congelada = Date.now() + 1400; clearTimeout(recolocarListasT);
+  recolocarListasT = setTimeout(() => { congelada = 0; pintarListas(); }, 1400);
+}
+function marcarFila(id, clase){
   const li = document.querySelector(`.tarea[data-id="${sel(id)}"]`);
-  if(li && li.classList.contains("sale")) return;
-  if(!li || reduceMov()){ fn(); return; }
-  li.classList.add("sale"); setTimeout(fn, 230);
+  if(!li) return true;
+  if(li.classList.contains("marcada")) return false;   // doble toque en la misma fila
+  li.classList.add("marcada", clase); congelarListas(); return true;
 }
 function hechaDesdeLista(x){
-  const id = x.id;
-  salidaAnimada(id, () => {
-    const y = tareaPorId(id); if(!y || y.hecha) return;
-    accion(y.fija ? `«${y.t}» hecha` : `«${y.t}» hecha y quitada`, () => completar(y));
-    if(!pend().length) celebrar(true);
-  });
+  const y = tareaPorId(x.id); if(!y || y.hecha || !marcarFila(y.id, "hecho")) return;
+  accion(`«${y.t}» hecha`, () => completar(y), true);
+  if(!pend().length) celebrar(true);
 }
 function volverRueda(x){
-  const id = x.id;
-  salidaAnimada(id, () => {
-    const y = tareaPorId(id); if(!y || !y.hecha) return;
-    accion(`«${y.t}» vuelve a la rueda`, () => { y.hecha = false; y.hechaEn = null; });
-  });
+  const y = tareaPorId(x.id); if(!y || !y.hecha || !marcarFila(y.id, "vuelve")) return;
+  accion(`«${y.t}» vuelve a la rueda`, () => { y.hecha = false; y.hechaEn = null; }, true);
 }
 function devolverTodas(){
   const H = S.tareas.filter(x => x.hecha);
@@ -1032,12 +1064,14 @@ function devolverTodas(){
 
 function pintarListas(){
   const P = pend(), H = S.tareas.filter(x => x.hecha);
-  const ul = $("lista"); ul.innerHTML = "";
-  P.forEach(x => ul.appendChild(filaTarea(x, P)));
-  $("num-rueda").textContent = P.length;
-  const uh = $("hechas"); uh.innerHTML = "";
-  H.slice().sort((a, b) => (vuelveEl(a) || 9e15) - (vuelveEl(b) || 9e15)).forEach(x => uh.appendChild(filaTarea(x, P)));
-  $("bloque-hechas").hidden = !H.length; $("num-hechas").textContent = H.length;
+  if(Date.now() >= congelada){
+    const ul = $("lista"); ul.innerHTML = "";
+    P.forEach(x => ul.appendChild(filaTarea(x, P)));
+    $("num-rueda").textContent = P.length;
+    const uh = $("hechas"); uh.innerHTML = "";
+    H.slice().sort((a, b) => (vuelveEl(a) || 9e15) - (vuelveEl(b) || 9e15)).forEach(x => uh.appendChild(filaTarea(x, P)));
+    $("bloque-hechas").hidden = !H.length; $("num-hechas").textContent = H.length;
+  }
 
   const hoy = new Date().toDateString(), R = S.reg.filter(r => new Date(r.fecha).toDateString() === hoy);
   const min = R.reduce((a, r) => a + r.min, 0);
@@ -1060,7 +1094,8 @@ function pintarVacio(){
     const b = v.querySelector("button"); if(b) b.onclick = devolverTodas;
   }
 }
-function pintar(){
+function pintar(enCadena){
+  if(!enCadena){ congelada = 0; clearTimeout(recolocarListasT); }   // cualquier otro cambio recoloca ya las listas
   if(premioId && !girando && !pend().some(x => x.id === premioId)){
     premioId = null;
     if(salida().querySelector(".premio-card")) salida().innerHTML = "";
@@ -1253,7 +1288,7 @@ function pintarRegistro(){
     const f = el("div", "f" + (abiertos[o.t] ? " abierto" : ""));
     const cab = el("div", "cab2");
     cab.innerHTML = `<span class="n">${esc(nombre)}</span><span class="m">${fmtMin(o.min)}</span>${o.veces ? `<span class="flecha">▾</span>` : ""}`;
-    cab.onclick = () => { abiertos[o.t] = !abiertos[o.t]; f.classList.toggle("abierto"); };
+    f.onclick = e => { if(e.target.closest(".det2")) return; abiertos[o.t] = !abiertos[o.t]; f.classList.toggle("abierto"); };
     const sub = el("div", "sub");
     sub.textContent = (o.veces
       ? `${o.veces} tanda${o.veces>1?"s":""} · ${Math.round(o.min/o.veces)} min de media · última ${fmtFecha(o.ult)}`
@@ -1290,7 +1325,7 @@ function pintarRegistro(){
 }
 
 function apuntar(tarea, minutos, res){
-  S.reg.push({ t:tarea.t, fija:!!tarea.fija, fecha:new Date().toISOString(), min:Math.max(1, minutos), res });
+  S.reg.push({ t:tarea.t, fija:!!tarea.fija, fecha:new Date().toISOString(), min:Math.max(1, minutos), res, id:tarea.id });
 }
 
 /* ---------- copia de seguridad (CSV) ---------- */
@@ -1305,6 +1340,7 @@ function pintarAvisoCopia(){
     const base = S.ultCopia || S.reg.reduce((m, r) => Math.min(m, +new Date(r.fecha) || m), Date.now());
     mostrar = Date.now() - base >= 30*DIA && Date.now() >= (S.copiaLuego || 0);
   }
+  if(S.T) mostrar = false;   // con un reloj en marcha, nada que empuje el reloj hacia abajo
   $("aviso-copia").hidden = !mostrar;
   if(mostrar) $("aviso-copia-txt").textContent = S.ultCopia
     ? `La última es de hace ${Math.floor((Date.now() - S.ultCopia)/DIA)} días.`
@@ -1314,14 +1350,14 @@ function pintarAvisoCopia(){
 function exportar(){
   const cab = "clase;fecha;tarea;tipo;minutos;resultado;peso;hecha;a_medias;cada_dias;hecha_en;tanda_min;id";
   const L = s => String(s).replace(/[;\r\n]+/g, ",");
-  const filas = S.reg.map(r => ["registro", r.fecha, L(r.t), r.fija ? "fija" : "suelta", r.min, L(r.res), "", "", "", "", "", "", ""].join(";"));
+  const filas = S.reg.map(r => ["registro", r.fecha, L(r.t), r.fija ? "fija" : "suelta", r.min, L(r.res), "", "", "", "", "", "", r.id || ""].join(";"));
   const tareas = S.tareas.map(x => ["tarea", "", L(x.t), x.fija ? "fija" : "suelta", "", "", x.peso, x.hecha ? "sí" : "no", x.medias ? "sí" : "no",
     x.fija ? (x.cada || 0) : "", x.hechaEn ? new Date(x.hechaEn).toISOString() : "", x.min || 0, x.id].join(";"));
   const conf = [["tanda", S.cfg.tanda], ["descanso", S.cfg.descanso]].map(([k, v]) => ["config", "", k, "", v, "", "", "", "", "", "", "", ""].join(";"));
   const csv = "﻿" + [cab, ...filas, ...tareas, ...conf].join("\n");
   const nombre = "ruleta-tareas-" + new Date().toISOString().slice(0,10) + ".csv";
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const hecho = () => { S.ultCopia = Date.now(); S.copiaLuego = 0; guardar(); pintarAvisoCopia(); toast("Copia guardada"); };
+  const hecho = () => { S.ultCopia = Date.now(); S.copiaLuego = 0; guardar(true); pintarAvisoCopia(); toast("Copia guardada"); };
   try{
     const file = new File([blob], nombre, {type:"text/csv"});
     if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
@@ -1340,21 +1376,27 @@ function importar(texto){
   const cab = lineas[0].split(";").map(v => v.trim());
   const nuevo = cab[0] === "clase", conTmin = cab.includes("tanda_min");
   const f = foto();
-  const fechas = new Set(S.reg.map(r => r.fecha));
+  const previas = new Set(S.reg), porFecha = new Map(S.reg.map(r => [r.fecha, r]));
   const N = s => String(s).replace(/[;\r\n]+/g, ",").trim().toLowerCase();
-  const filasTarea = [];
+  const filasTarea = [], alias = Object.create(null);
   let n = 0, nc = 0, ultima = 0;
   lineas.slice(1).forEach(l => {
     const c = l.split(";").map(v => v.trim());
     const fila = nuevo ? c : ["registro", ...c];
-    const [clase, fecha, t, tipo, min, res] = fila;
+    const [clase, fecha, t, tipo, min, res] = fila, idr = fila[12];
     if(clase === "registro"){
       // una tanda se reconoce por su fecha (lleva milésimas), aunque su tarea se haya renombrado después
       if(!fecha || !t || !/^\d{4}-\d{2}-\d{2}T/.test(fecha) || isNaN(+new Date(fecha)) || !(+min > 0)) return;
       ultima = Math.max(ultima, +new Date(fecha));
-      if(fechas.has(fecha)) return;
-      fechas.add(fecha);
-      S.reg.push({ t, fija: tipo === "fija", fecha, min: Math.min(240, Math.max(1, Math.round(+min))), res: res || "terminada" }); n++;
+      const r0 = porFecha.get(fecha);
+      if(r0){
+        // ya estaba, con otro nombre: la tarea se renombró después de la copia (sirve para casar copias sin id)
+        if(N(r0.t) !== N(t) && !!r0.fija === (tipo === "fija")) alias[N(t) + "|" + tipo] = r0.t;
+        return;
+      }
+      const r = { t, fija: tipo === "fija", fecha, min: Math.min(240, Math.max(1, Math.round(+min))), res: res || "terminada" };
+      if(idValido(idr)) r.id = idr;
+      S.reg.push(r); porFecha.set(fecha, r); n++;
     }else if(clase === "tarea" && t){
       filasTarea.push(fila);
     }else if(clase === "config" && (t === "tanda" || t === "descanso") && +min > 0){
@@ -1365,17 +1407,27 @@ function importar(texto){
   let quitadas = 0;
   if(filasTarea.length){
     const usadas = new Set(), lista = [];
-    const enFaena = S.T && S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null;
+    // la que está en faena y aquella a la que volverás tras el descanso no se quitan ni se marcan hechas
+    const enUso = [S.T && S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null, S.T && S.T.vuelta ? tareaPorId(S.T.vuelta) : null].filter(Boolean);
+    const tipoDe = y => y.fija ? "fija" : "suelta";
     filasTarea.forEach(([, , t, tipo, , , peso, hecha, medias, cada, hechaEn, tmin, id]) => {
-      const libre = y => !usadas.has(y);
+      const libre = y => !usadas.has(y), al = alias[N(t) + "|" + tipo];
       let x = (idValido(id) && S.tareas.find(y => libre(y) && y.id === id))
-        || S.tareas.find(y => libre(y) && N(y.t) === N(t) && (y.fija ? "fija" : "suelta") === tipo)
+        || (al && S.tareas.find(y => libre(y) && y.t === al && tipoDe(y) === tipo))
+        || S.tareas.find(y => libre(y) && N(y.t) === N(t) && tipoDe(y) === tipo)
         || S.tareas.find(y => libre(y) && N(y.t) === N(t));
-      if(!x) x = { id: idValido(id) && !tareaPorId(id) ? id : nuevoId(), t, peso:1, hecha:false, medias:false, fija:false, min:0 };
+      if(!x) x = { id: idValido(id) && !tareaPorId(id) && !lista.some(y => y.id === id) ? id : nuevoId(), t, peso:1, hecha:false, medias:false, fija:false, min:0 };
       usadas.add(x);
-      if(tipo === "fija" || tipo === "suelta") x.fija = tipo === "fija";
+      if(tipo === "fija" || tipo === "suelta"){
+        const fija = tipo === "fija";
+        // si en la copia tiene el otro tipo, su historial cambia de tipo con ella
+        if(S.tareas.includes(x) && x.fija !== fija) S.reg.forEach(r => { if(previas.has(r) && (r.id ? r.id === x.id : (r.t === x.t && !!r.fija === x.fija))) r.fija = fija; });
+        x.fija = fija;
+      }
       if(peso) x.peso = Math.min(5, Math.max(1, Math.round(+peso) || 1));
-      x.hecha = hecha === "sí"; x.medias = medias === "sí";
+      const ocupada = enUso.includes(x);
+      x.hecha = hecha === "sí" && !ocupada;
+      x.medias = medias === "sí" || (ocupada && x.medias);
       if(x.fija){
         if(cada && !isNaN(+cada)) x.cada = Math.min(365, Math.max(0, Math.round(+cada)));
         else if(typeof x.cada !== "number") x.cada = CADA_DEF;
@@ -1385,7 +1437,7 @@ function importar(texto){
       if(conTmin) x.min = tmin && !isNaN(+tmin) ? Math.min(60, Math.max(0, Math.round(+tmin))) : 0;
       lista.push(x);
     });
-    if(enFaena && !usadas.has(enFaena)) lista.push(enFaena);   // la que está en faena no se quita
+    enUso.forEach(y => { if(!usadas.has(y)) lista.push(y); });
     quitadas = S.tareas.filter(x => !lista.includes(x)).length;
     S.tareas = lista;
   }
@@ -1397,7 +1449,8 @@ function importar(texto){
   if(n) partes.push(`${n} tanda${n > 1 ? "s" : ""} nueva${n > 1 ? "s" : ""}`);
   if(filasTarea.length) partes.push(`${filasTarea.length} tarea${filasTarea.length > 1 ? "s" : ""}`);
   if(!partes.length && nc) partes.push("los ajustes");
-  toast(`Copia recuperada: ${partes.join(" y ")}` + (quitadas ? ` (se quitan ${quitadas} que no estaban en la copia)` : ""), deshacerDe(f, v), 9000);
+  const q = quitadas === 1 ? " (se quita 1 que no estaba en la copia)" : quitadas ? ` (se quitan ${quitadas} que no estaban en la copia)` : "";
+  toast(`Copia recuperada: ${partes.join(" y ")}${q}`, deshacerDe(f, v), 9000);
   bloquear();
 }
 function pedirPersistencia(){ try{ if(navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {}); }catch(e){} }
@@ -1470,13 +1523,16 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.1";
+const VERSION = "2.2";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
     if(!r.ok) return;
     const m = (await r.text()).match(/class="ver">v([\d.]+)</);
-    if(m && m[1] !== VERSION) $("nueva-version").classList.add("on");
+    if(m && m[1] !== VERSION && !$("nueva-version").classList.contains("on")){
+      $("nueva-version").classList.add("on");
+      const c = $("salida").querySelector(".reloj-card"); if(c) requestAnimationFrame(() => verTarjeta(c));
+    }
   }catch(e){}
 }
 $("recargar").onclick = async () => {
@@ -1504,10 +1560,10 @@ function arrancar(tipo, segs, id, vuelta){
   premioId = null; firmaReloj = "";
   S.T = { tipo, total:segs, fin: Date.now() + segs*1000, pausa:false, pausado:segs, id:id || null, vuelta:vuelta || null, sonado:false };
   audioVivo();
-  guardar(); despierto(true); latir(); pintar(); bloquear();
+  guardar(true); despierto(true); latir(); pintar(); bloquear();
 }
 function parar(){
-  audioParar(); S.T = null; guardar(); clearInterval(tic); tic = null; despierto(false);
+  audioParar(); S.T = null; guardar(true); clearInterval(tic); tic = null; despierto(false);
   firmaReloj = ""; document.title = "Ruleta de tareas";
   salida().innerHTML = ""; pintar(); bloquear();
 }
@@ -1515,17 +1571,19 @@ function alargar(seg){
   if(!S.T) return;
   const r = resta();
   S.T.total += seg; S.T.sonado = false;
-  if(S.T.tipo === "tarea") S.T.prorroga = true;   // con prórroga, terminar antes no deja bloque: toca descanso
+  // los minutos de más no cuentan como sobrantes: terminar dentro de la prórroga da descanso, no bloque
+  if(S.T.tipo === "tarea") S.T.extra = (S.T.extra || 0) + seg;
   if(S.T.pausa) S.T.pausado = r + seg;
   else S.T.fin = Date.now() + (r + seg)*1000;
   pararAlarma(); audioVivo();
-  guardar(); despierto(true); latir(); bloquear();
+  guardar(true); despierto(true); latir();
+  if(S.T.tipo !== "tarea") bloquear();   // en la tanda los botones no se mueven: dos toques son +10 min
 }
 function pausar(){
   if(!S.T) return;
   if(S.T.pausa){ S.T.fin = Date.now() + S.T.pausado*1000; S.T.pausa = false; audioVivo(); }
   else { S.T.pausado = resta(); S.T.pausa = true; pararAlarma(); }
-  guardar(); pintarReloj(); bloquear();
+  guardar(true); pintarReloj(); bloquear();
 }
 
 /* pantalla encendida mientras corre un reloj */
@@ -1576,7 +1634,7 @@ function latir(){
   tic = setInterval(() => {
     if(!S.T){ clearInterval(tic); return; }
     if(!S.T.sonado && !S.T.pausa && resta() === 0){
-      S.T.sonado = true; guardar(); alarma();
+      S.T.sonado = true; guardar(true); alarma(); irAlReloj();
       const tarea = S.T.tipo === "tarea" ? tareaPorId(S.T.id) : null, vt = tareaVuelta();
       avisar(tarea ? "Se acabó la tanda" : "Se acabó el descanso",
         tarea ? tarea.t + " · Terminada, a medias o 5 minutos más" : vt ? "Vuelve a " + vt.t + " o a la ruleta" : "Vuelve a la ruleta");
@@ -1597,16 +1655,24 @@ function cerrarTanda(tarea, res){
   apuntar(tarea, usados, res);
   if(res === "terminada"){ completar(tarea); celebrar(!pend().length); }
   else tarea.medias = true;
-  if(sobra > 0 && !S.T.prorroga){
-    S.bloque = pend().length ? { seg: sobra, desde: Date.now() } : null;
+  guardar();   // cambia el registro: retira cualquier «Deshacer» anterior
+  // lo que sobra de la tanda original (sin contar las prórrogas) pasa a la siguiente, sin descanso
+  const queda = S.T.prorroga ? 0 : sobra - (S.T.extra || 0);
+  if(queda > 0){
+    S.bloque = pend().length ? { seg: queda, desde: Date.now() } : null;
     S.T = null; clearInterval(tic); tic = null; audioParar(); despierto(false);
     firmaReloj = ""; document.title = "Ruleta de tareas";
-    guardar(); salida().innerHTML = ""; pintar(); tarjetaBloque(); bloquear();
+    guardar(true); salida().innerHTML = ""; pintar(); tarjetaBloque(); bloquear();
   }else{
     arrancar("descanso", durDescanso(), null, res === "a medias" ? tarea.id : null);
   }
 }
-
+function irAlReloj(){
+  // si suena estando en Registro o más abajo, la app te lleva al reloj
+  const t = document.querySelector('.tabs button[data-v="ruleta"]');
+  if(t && !t.classList.contains("on")) t.click();
+  requestAnimationFrame(() => { const c = salida().querySelector(".reloj-card"); if(c) verTarjeta(c); });
+}
 function construirReloj(tarea, vt, fin, s){
   const c = el("div", "tarjeta reloj-card" + (tarea ? "" : " desc-card"));
   const totMin = Math.round(S.T.total/60);
@@ -1652,7 +1718,7 @@ function pintarReloj(){
     firmaReloj = firma;
     c = construirReloj(tarea, vt, fin, s);
     salida().innerHTML = ""; salida().appendChild(c);
-    if(nueva){ c.classList.add("entra"); try{ scrollTo(0, 0); }catch(e){} }
+    if(nueva){ c.classList.add("entra"); requestAnimationFrame(() => { try{ scrollTo(0, 0); }catch(e){} verTarjeta(c); }); }
     anunciar(tarea ? (fin ? "Se acabó la tanda de " + tarea.t : S.T.pausa ? "En pausa" : "En faena: " + tarea.t) : (fin ? "Se acabó el descanso" : "Descanso"));
   }
   const mm = String(Math.floor(s/60)).padStart(2,"0"), ss = String(s%60).padStart(2,"0");
@@ -1718,11 +1784,11 @@ $("fichero").onchange = e => {
   e.target.value = "";
 };
 $("copia-si").onclick = exportar;
-$("copia-luego").onclick = () => { S.copiaLuego = Date.now() + 7*DIA; guardar(); pintarAvisoCopia(); bloquear(); };
+$("copia-luego").onclick = () => { S.copiaLuego = Date.now() + 7*DIA; guardar(true); pintarAvisoCopia(); bloquear(); };
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   comprobarVersion(); revisarVueltas(); pintarListas(); pintarAvisoCopia();
-  if(S.T){ pintarReloj(); despierto(true); }
+  if(S.T){ pintarReloj(); despierto(true); if(resta() === 0) irAlReloj(); }
 });
 try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", aplicarTema); }catch(e){}
 
