@@ -9,3 +9,6 @@ Antes de empezar, lee en Notion «Lo que todos debéis saber» (https://app.noti
 - La app está en `index.html`. En cada cambio, subir la versión en los dos sitios donde aparece
   (`<div class="ver">vX.Y</div>` y `const VERSION = "X.Y";`) para que en el móvil salga el aviso
   "Hay una versión nueva".
+- Registro para Lumen: desde la v2.4, si en Ajustes se pega una llave de GitHub, la app guarda sola
+  `registro.csv` (copia completa: tandas, tareas y ajustes, mismo formato que «Guardar copia») en el
+  repositorio privado `alexsolanaj95-glitch/ruleta-registro`. La llave vive solo en el móvil (localStorage).

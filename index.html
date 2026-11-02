@@ -289,6 +289,12 @@
   .fila-btn{display:flex; gap:8px; flex-wrap:wrap}
   .fila-btn button{flex:1 1 auto; min-width:130px; white-space:nowrap; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-weight:600}
   .fila-btn button svg{width:16px; height:16px}
+  .campo input[type=password]{width:100%; margin-bottom:8px}
+  .estado-gh{display:flex; align-items:center; gap:7px; font-size:.84rem; margin:2px 0 10px}
+  .estado-gh::before{content:""; width:9px; height:9px; border-radius:50%; flex:none; background:var(--soft)}
+  .estado-gh.bien::before{background:var(--ok)}
+  .estado-gh.mal{color:var(--peligro)}
+  .estado-gh.mal::before{background:var(--peligro)}
   .listo{width:100%; margin-top:20px; padding:13px; font-weight:700}
   /* los botones de la hoja siempre a la vista, pegados abajo */
   .pie-hoja{position:sticky; bottom:calc(-22px - env(safe-area-inset-bottom)); z-index:2; margin:0 -18px calc(-22px - env(safe-area-inset-bottom));
@@ -364,7 +370,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.3</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.4</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -556,7 +562,7 @@ function cargar(){
 function guardar(soloEstado){
   // un cambio en tareas, registro o ajustes retira el «Deshacer» pendiente;
   // los de solo estado (el reloj, los avisos) no, porque deshacer no los pisaría
-  if(!soloEstado){ version++; if(toastDeshacer) cerrarToast(); }
+  if(!soloEstado){ version++; if(toastDeshacer) cerrarToast(); marcarSync(); }
   try{ localStorage.setItem(CLAVE, JSON.stringify(S)); }catch(e){}
 }
 
@@ -840,6 +846,29 @@ function ajustes(){
     fb.append(boton("Guardar copia", "", exportar), boton("Recuperar copia", "", () => $("fichero").click()));
     f5.append(fb);
     f5.append(el("div", "ayuda", esc(infoCopia())));
+    const f6 = campo(c, "Guardar en GitHub (para Lumen)");
+    const [cls, txt] = textoGh(); f6.append(el("div", "estado-gh " + cls, esc(txt)));
+    if(!ghListo()){
+      const tok = el("input"); tok.type = "password"; tok.placeholder = "Pega aquí la llave de GitHub"; tok.autocomplete = "off"; tok.setAttribute("aria-label", "Llave de GitHub");
+      const rep = el("input"); rep.type = "text"; rep.value = (S.gh && S.gh.repo) || "alexsolanaj95-glitch/ruleta-registro"; rep.setAttribute("aria-label", "Repositorio");
+      f6.append(tok, rep);
+      f6.append(boton("Conectar y guardar", "b-acc", async () => {
+        const t = tok.value.trim(), r = rep.value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/+$/, "");
+        if(!t || !/^[\w.-]+\/[\w.-]+$/.test(r)){ toast("Falta la llave o el repositorio (cuenta/nombre)"); return; }
+        S.gh = { token: t, repo: r, pendiente: true }; guardar(true);
+        toast("Conectando con GitHub…");
+        const ok = await sincronizar(true);
+        toast(ok ? "¡Conectado! El registro ya está en GitHub" : "No se ha podido: " + S.gh.error);
+        pinta(c);
+      }));
+      f6.append(el("div", "ayuda", "Cada vez que cierres una tanda o cambies algo, se guarda solo el archivo registro.csv en ese repositorio. La llave se queda en este móvil."));
+    }else{
+      f6.append(el("div", "ayuda", "Repositorio: " + esc(S.gh.repo) + " · archivo registro.csv"));
+      const fg = el("div", "fila-btn");
+      fg.append(boton("Mandar ahora", "", async () => { const ok = await sincronizar(true); toast(ok ? "Guardado en GitHub" : "No se ha podido: " + S.gh.error); }),
+        boton("Desconectar", "b-peligro", () => { S.gh = null; clearTimeout(ghT); guardar(true); pinta(c); toast("GitHub desconectado"); }));
+      f6.append(fg);
+    }
     const pie = el("div", "pie-hoja"); pie.append(boton("Listo", "b-acc listo", () => cerrarHoja())); c.append(pie);
   };
   abrirHoja(pinta);
@@ -1347,6 +1376,67 @@ function infoCopia(){
   const d = Math.floor((Date.now() - S.ultCopia)/DIA);
   return d <= 0 ? "Última copia: hoy." : d === 1 ? "Última copia: ayer." : `Última copia: hace ${d} días.`;
 }
+/* ---------- registro guardado solo en GitHub (para Lumen) ----------
+   La llave se queda en este móvil (localStorage); la página pública no la lleva. */
+let ghT = null, ghEnCurso = false, ghCambios = 0;
+const ghListo = () => !!(S.gh && S.gh.token && S.gh.repo);
+function marcarSync(){
+  if(!ghListo()) return;
+  ghCambios++; S.gh.pendiente = true;
+  clearTimeout(ghT); ghT = setTimeout(() => sincronizar(), 4000);
+}
+const hashTxt = t => { let h = 5381; for(let i = 0; i < t.length; i++) h = (h*33 ^ t.charCodeAt(i)) >>> 0; return h.toString(36) + t.length; };
+function b64(t){
+  const bytes = new TextEncoder().encode(t); let bin = "";
+  for(let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+function errorGh(st){
+  return st === 401 ? "La llave no vale o ha caducado"
+    : (st === 403 || st === 404) ? "La llave no tiene permiso en ese repositorio, o el repositorio no existe"
+    : st === 409 || st === 422 ? "GitHub no ha aceptado el cambio; se reintentará"
+    : "GitHub respondió con un error " + st;
+}
+async function sincronizar(forzar){
+  if(!ghListo()) return false;
+  if(ghEnCurso){ clearTimeout(ghT); ghT = setTimeout(() => sincronizar(forzar), 3000); return false; }
+  ghEnCurso = true; clearTimeout(ghT);
+  const g = S.gh, n = ghCambios, csv = csvCopia(), huella = hashTxt(csv);
+  try{
+    if(!forzar && huella === g.huella){ if(ghCambios === n) g.pendiente = false; return true; }   // nada nuevo que mandar
+    const url = `https://api.github.com/repos/${g.repo.split("/").map(encodeURIComponent).join("/")}/contents/registro.csv`;
+    const h = { Authorization: "Bearer " + g.token, Accept: "application/vnd.github+json" };
+    let sha;
+    const r0 = await fetch(url, { headers: h, cache: "no-store" });
+    if(r0.ok) sha = (await r0.json()).sha;
+    else if(r0.status !== 404) throw { st: r0.status };
+    const r1 = await fetch(url, { method: "PUT", headers: Object.assign({ "Content-Type": "application/json" }, h),
+      body: JSON.stringify({ message: "Registro de la ruleta · " + new Date().toLocaleString("es-ES"), content: b64(csv), sha }) });
+    if(!r1.ok) throw { st: r1.status };
+    g.huella = huella; g.ultima = Date.now(); g.error = null; S.ultCopia = Date.now();
+    if(ghCambios === n) g.pendiente = false;
+    return true;
+  }catch(e){
+    g.error = e && e.st ? errorGh(e.st) : "Sin conexión: se mandará en cuanto haya internet";
+    return false;
+  }finally{
+    ghEnCurso = false; guardar(true); pintarAvisoCopia(); pintarGh();
+    if(S.gh && S.gh.pendiente && !S.gh.error && ghCambios !== n){ ghT = setTimeout(() => sincronizar(), 2000); }
+  }
+}
+function textoGh(){
+  if(!ghListo()) return ["", "Sin conectar."];
+  const g = S.gh;
+  if(g.error) return ["mal", g.error];
+  if(!g.ultima) return ["", "Conectado. Aún no se ha mandado nada."];
+  const min = Math.round((Date.now() - g.ultima)/60000);
+  return ["bien", "Guardado en GitHub " + (min < 1 ? "ahora mismo" : min < 60 ? `hace ${min} min` : min < 1440 ? `hace ${Math.round(min/60)} h` : `hace ${Math.round(min/1440)} días`) + (g.pendiente ? " · hay cambios por mandar" : "")];
+}
+function pintarGh(){
+  const e = document.querySelector(".hoja .estado-gh"); if(!e) return;
+  const [cls, txt] = textoGh(); e.className = "estado-gh " + cls; e.textContent = txt;
+}
+
 function pintarAvisoCopia(){
   let mostrar = false;
   if(S.reg.length >= 5){
@@ -1360,14 +1450,17 @@ function pintarAvisoCopia(){
     : "Todavía no has guardado ninguna. Si se borran los datos del navegador o cambias de móvil, el registro se perdería.";
   $("copia-info").textContent = infoCopia() + " La copia es un archivo que puedes guardar en Archivos, en Drive o mandártelo a ti mismo.";
 }
-function exportar(){
+function csvCopia(){
   const cab = "clase;fecha;tarea;tipo;minutos;resultado;peso;hecha;a_medias;cada_dias;hecha_en;tanda_min;id";
   const L = s => String(s).replace(/[;\r\n]+/g, ",");
   const filas = S.reg.map(r => ["registro", r.fecha, L(r.t), r.fija ? "fija" : "suelta", r.min, L(r.res), "", "", "", "", "", "", r.id || ""].join(";"));
   const tareas = S.tareas.map(x => ["tarea", "", L(x.t), x.fija ? "fija" : "suelta", "", "", x.peso, x.hecha ? "sí" : "no", x.medias ? "sí" : "no",
     x.fija ? (x.cada || 0) : "", x.hechaEn ? new Date(x.hechaEn).toISOString() : "", x.min || 0, x.id].join(";"));
   const conf = [["tanda", S.cfg.tanda], ["descanso", S.cfg.descanso]].map(([k, v]) => ["config", "", k, "", v, "", "", "", "", "", "", "", ""].join(";"));
-  const csv = "﻿" + [cab, ...filas, ...tareas, ...conf].join("\n");
+  return "﻿" + [cab, ...filas, ...tareas, ...conf].join("\n");
+}
+function exportar(){
+  const csv = csvCopia();
   const nombre = "ruleta-tareas-" + new Date().toISOString().slice(0,10) + ".csv";
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
   const hecho = () => { S.ultCopia = Date.now(); S.copiaLuego = 0; guardar(true); pintarAvisoCopia(); toast("Copia guardada"); };
@@ -1536,7 +1629,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.3";
+const VERSION = "2.4";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
@@ -1801,6 +1894,7 @@ $("copia-luego").onclick = () => { S.copiaLuego = Date.now() + 7*DIA; guardar(tr
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   comprobarVersion(); revisarVueltas(); pintarListas(); pintarAvisoCopia();
+  if(ghListo() && S.gh.pendiente) sincronizar();
   if(S.T){ pintarReloj(); despierto(true); if(resta() === 0) irAlReloj(); }
 });
 try{ matchMedia("(prefers-color-scheme: dark)").addEventListener("change", aplicarTema); }catch(e){}
@@ -1813,7 +1907,9 @@ if(S.T){ latir(); despierto(true); }
 else if(S.bloque) tarjetaBloque();
 $("pista").hidden = !!S.cfg.pistaVista;
 revisarVueltas();
-setInterval(() => { if(!document.hidden) revisarVueltas(); }, 60000);
+setInterval(() => { if(!document.hidden){ revisarVueltas(); if(ghListo() && S.gh.pendiente && !ghEnCurso) sincronizar(); } }, 60000);
+window.addEventListener("online", () => { if(ghListo() && S.gh.pendiente) sincronizar(); });
+if(ghListo() && S.gh.pendiente) setTimeout(() => sincronizar(), 2500);
 </script>
 </body>
 </html>
