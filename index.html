@@ -370,7 +370,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.6</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.7</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -1395,7 +1395,7 @@ function b64(t){
 function errorGh(st){
   return st === 401 ? "La llave no vale o ha caducado"
     : (st === 403 || st === 404) ? "La llave no tiene permiso en ese repositorio, o el repositorio no existe"
-    : st === 409 || st === 422 ? "GitHub no ha aceptado el cambio; se reintentará"
+    : st === 409 || st === 422 || st >= 500 ? "GitHub ha fallado un momento; se reintenta solo"
     : "GitHub respondió con un error " + st;
 }
 // forzar: manda aunque no haya cambios; tomar: este aparato pasa a ser el que guarda (al conectar)
@@ -1422,6 +1422,8 @@ async function sincronizar(forzar, tomar){
     if(ghCambios === n) g.pendiente = false;
     return true;
   }catch(e){
+    // fallos pasajeros de GitHub (5xx, conflictos) o de conexión: otro intento en 20 s
+    if(!(e && (e.otro || e.st === 401 || e.st === 403 || e.st === 404))){ clearTimeout(ghT); ghT = setTimeout(() => { if(ghListo() && S.gh.pendiente) sincronizar(); }, 20000); }
     g.error = e && e.otro ? "Otro aparato ha guardado el registro después que este. Para no pisarlo, este no manda nada: desconéctalo aquí, o pulsa «Usar este» si este es el bueno."
       : e && e.st ? errorGh(e.st) : "Sin conexión: se mandará en cuanto haya internet";
     return false;
@@ -1635,7 +1637,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.6";
+const VERSION = "2.7";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
