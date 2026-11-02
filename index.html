@@ -370,7 +370,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.5</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.6</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -857,7 +857,7 @@ function ajustes(){
         if(!t || !/^[\w.-]+\/[\w.-]+$/.test(r)){ toast("Falta la llave o el repositorio (cuenta/nombre)"); return; }
         S.gh = { token: t, repo: r, pendiente: true }; guardar(true);
         toast("Conectando con GitHub…");
-        const ok = await sincronizar(true);
+        const ok = await sincronizar(true, true);
         toast(ok ? "¡Conectado! El registro ya está en GitHub" : "No se ha podido: " + S.gh.error);
         pinta(c);
       }));
@@ -865,6 +865,7 @@ function ajustes(){
     }else{
       f6.append(el("div", "ayuda", "Repositorio: " + esc(S.gh.repo) + " · archivo ruleta-de-tareas/registro.csv"));
       const fg = el("div", "fila-btn");
+      if(S.gh.error && /Otro aparato/.test(S.gh.error)) fg.append(boton("Usar este", "", async () => { const ok = await sincronizar(true, true); toast(ok ? "Ahora guarda este aparato" : "No se ha podido: " + S.gh.error); pinta(c); }));
       fg.append(boton("Mandar ahora", "", async () => { const ok = await sincronizar(true); toast(ok ? "Guardado en GitHub" : "No se ha podido: " + S.gh.error); }),
         boton("Desconectar", "b-peligro", () => { S.gh = null; clearTimeout(ghT); guardar(true); pinta(c); toast("GitHub desconectado"); }));
       f6.append(fg);
@@ -1397,9 +1398,10 @@ function errorGh(st){
     : st === 409 || st === 422 ? "GitHub no ha aceptado el cambio; se reintentará"
     : "GitHub respondió con un error " + st;
 }
-async function sincronizar(forzar){
+// forzar: manda aunque no haya cambios; tomar: este aparato pasa a ser el que guarda (al conectar)
+async function sincronizar(forzar, tomar){
   if(!ghListo()) return false;
-  if(ghEnCurso){ clearTimeout(ghT); ghT = setTimeout(() => sincronizar(forzar), 3000); return false; }
+  if(ghEnCurso){ clearTimeout(ghT); ghT = setTimeout(() => sincronizar(forzar, tomar), 3000); return false; }
   ghEnCurso = true; clearTimeout(ghT);
   const g = S.gh, n = ghCambios, csv = csvCopia(), huella = hashTxt(csv);
   try{
@@ -1410,14 +1412,18 @@ async function sincronizar(forzar){
     const r0 = await fetch(url, { headers: h, cache: "no-store" });
     if(r0.ok) sha = (await r0.json()).sha;
     else if(r0.status !== 404) throw { st: r0.status };
+    // si otro aparato ha guardado después que este, no se pisa su registro
+    if(sha && g.sha && sha !== g.sha && !tomar) throw { otro: true };
     const r1 = await fetch(url, { method: "PUT", headers: Object.assign({ "Content-Type": "application/json" }, h),
       body: JSON.stringify({ message: "Registro de la ruleta · " + new Date().toLocaleString("es-ES"), content: b64(csv), sha }) });
     if(!r1.ok) throw { st: r1.status };
+    try{ g.sha = (await r1.json()).content.sha; }catch(e){}
     g.huella = huella; g.ultima = Date.now(); g.error = null; S.ultCopia = Date.now();
     if(ghCambios === n) g.pendiente = false;
     return true;
   }catch(e){
-    g.error = e && e.st ? errorGh(e.st) : "Sin conexión: se mandará en cuanto haya internet";
+    g.error = e && e.otro ? "Otro aparato ha guardado el registro después que este. Para no pisarlo, este no manda nada: desconéctalo aquí, o pulsa «Usar este» si este es el bueno."
+      : e && e.st ? errorGh(e.st) : "Sin conexión: se mandará en cuanto haya internet";
     return false;
   }finally{
     ghEnCurso = false; guardar(true); pintarAvisoCopia(); pintarGh();
@@ -1629,7 +1635,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.5";
+const VERSION = "2.6";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
