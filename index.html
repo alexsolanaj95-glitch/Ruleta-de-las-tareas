@@ -370,7 +370,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.4</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.5</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -850,7 +850,7 @@ function ajustes(){
     const [cls, txt] = textoGh(); f6.append(el("div", "estado-gh " + cls, esc(txt)));
     if(!ghListo()){
       const tok = el("input"); tok.type = "password"; tok.placeholder = "Pega aquí la llave de GitHub"; tok.autocomplete = "off"; tok.setAttribute("aria-label", "Llave de GitHub");
-      const rep = el("input"); rep.type = "text"; rep.value = (S.gh && S.gh.repo) || "alexsolanaj95-glitch/ruleta-registro"; rep.setAttribute("aria-label", "Repositorio");
+      const rep = el("input"); rep.type = "text"; rep.value = (S.gh && S.gh.repo) || "alexsolanaj95-glitch/registros"; rep.setAttribute("aria-label", "Repositorio");
       f6.append(tok, rep);
       f6.append(boton("Conectar y guardar", "b-acc", async () => {
         const t = tok.value.trim(), r = rep.value.trim().replace(/^https?:\/\/github\.com\//, "").replace(/\/+$/, "");
@@ -861,9 +861,9 @@ function ajustes(){
         toast(ok ? "¡Conectado! El registro ya está en GitHub" : "No se ha podido: " + S.gh.error);
         pinta(c);
       }));
-      f6.append(el("div", "ayuda", "Cada vez que cierres una tanda o cambies algo, se guarda solo el archivo registro.csv en ese repositorio. La llave se queda en este móvil."));
+      f6.append(el("div", "ayuda", "Cada vez que cierres una tanda o cambies algo, se guarda solo el archivo ruleta-de-tareas/registro.csv en ese repositorio. La llave se queda en este móvil."));
     }else{
-      f6.append(el("div", "ayuda", "Repositorio: " + esc(S.gh.repo) + " · archivo registro.csv"));
+      f6.append(el("div", "ayuda", "Repositorio: " + esc(S.gh.repo) + " · archivo ruleta-de-tareas/registro.csv"));
       const fg = el("div", "fila-btn");
       fg.append(boton("Mandar ahora", "", async () => { const ok = await sincronizar(true); toast(ok ? "Guardado en GitHub" : "No se ha podido: " + S.gh.error); }),
         boton("Desconectar", "b-peligro", () => { S.gh = null; clearTimeout(ghT); guardar(true); pinta(c); toast("GitHub desconectado"); }));
@@ -1404,7 +1404,7 @@ async function sincronizar(forzar){
   const g = S.gh, n = ghCambios, csv = csvCopia(), huella = hashTxt(csv);
   try{
     if(!forzar && huella === g.huella){ if(ghCambios === n) g.pendiente = false; return true; }   // nada nuevo que mandar
-    const url = `https://api.github.com/repos/${g.repo.split("/").map(encodeURIComponent).join("/")}/contents/registro.csv`;
+    const url = `https://api.github.com/repos/${g.repo.split("/").map(encodeURIComponent).join("/")}/contents/ruleta-de-tareas/registro.csv`;
     const h = { Authorization: "Bearer " + g.token, Accept: "application/vnd.github+json" };
     let sha;
     const r0 = await fetch(url, { headers: h, cache: "no-store" });
@@ -1629,7 +1629,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.4";
+const VERSION = "2.5";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
