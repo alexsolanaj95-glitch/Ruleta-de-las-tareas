@@ -294,6 +294,9 @@
   .pie-hoja{position:sticky; bottom:calc(-22px - env(safe-area-inset-bottom)); z-index:2; margin:0 -18px calc(-22px - env(safe-area-inset-bottom));
     padding:12px 18px calc(22px + env(safe-area-inset-bottom)); background:var(--panel); box-shadow:0 -1px 0 var(--line)}
   .pie-hoja .listo{margin-top:10px}
+  .pie-hoja .empezar{width:100%; margin-bottom:8px; padding:13px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:7px}
+  .pie-hoja .empezar svg{width:16px; height:16px}
 
   /* ---------- registro ---------- */
   .tot{display:flex; flex-direction:column; gap:8px}
@@ -361,7 +364,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.2</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.3</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -776,6 +779,16 @@ function editar(x){
     }
 
     const pie = el("div", "pie-hoja"), acc = el("div", "fila-btn");
+    // para lo urgente: empezar esta tarea ya, sin girar (también corta el descanso)
+    if(!S.T || S.T.tipo === "descanso"){
+      pie.append(boton("Empezar ahora", "b-acc empezar", () => {
+        validar(); cerrarHoja(true);
+        const z = tareaPorId(id); if(!z) return;
+        if(z.hecha){ z.hecha = false; z.hechaEn = null; }
+        pararAlarma(); quitarPremio();
+        arrancar("tarea", durTarea(z), z.id);
+      }, ICON.play));
+    }
     if(y.hecha) acc.append(boton("Volver a la rueda", "", () => { validar(); cerrarHoja(true); const z = tareaPorId(id); if(z) volverRueda(z); }, ICON.volver));
     else if(!enFaena) acc.append(boton("Marcar hecha", "", () => { validar(); cerrarHoja(true); const z = tareaPorId(id); if(z) hechaDesdeLista(z); }, ICON.check));
     const del = boton("Borrar", "b-peligro", () => {
@@ -1523,7 +1536,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.2";
+const VERSION = "2.3";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
