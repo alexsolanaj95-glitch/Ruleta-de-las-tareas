@@ -370,7 +370,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.7</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.8</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -1637,7 +1637,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.7";
+const VERSION = "2.8";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
