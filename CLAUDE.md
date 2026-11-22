@@ -13,3 +13,8 @@ Antes de empezar, lee en Notion «Lo que todos debéis saber» (https://app.noti
   `ruleta-de-tareas/registro.csv` (copia completa: tandas, tareas y ajustes, mismo formato que «Guardar copia»)
   en el repositorio privado `alexsolanaj95-glitch/registros`, que es común para los registros de todas las apps
   (cada una en su carpeta). La llave vive solo en el móvil (localStorage).
+- Tandas hechas con Lumen: desde la v2.9, la app recoge sola (al abrirse, al volver a ella y cada minuto)
+  las filas «registro» de `ruleta-de-tareas/de-lumen.csv`, en ese mismo repositorio, y las mete en su registro:
+  la tarea queda hecha o a medias como si la tanda se hubiera cerrado en el móvil. Ese archivo solo lo escribe
+  Lumen (con `Lumen\herramientas\ruleta\ruleta.js`, en el ordenador); `registro.csv` solo lo escribe la app.
+  Cada tanda se reconoce por su fecha y se recoge una sola vez (`S.gh.lumenVistas`).
