@@ -370,7 +370,7 @@
 <body>
 
 <header class="cab">
-  <div><h1>Ruleta de tareas</h1><div class="ver">v2.8</div></div>
+  <div><h1>Ruleta de tareas</h1><div class="ver">v2.9</div></div>
   <div class="cab-btns">
     <button id="ajustes" class="redondo" aria-label="Ajustes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg></button>
     <button id="mas" class="redondo" aria-label="Añadir una tarea" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -864,6 +864,7 @@ function ajustes(){
       f6.append(el("div", "ayuda", "Cada vez que cierres una tanda o cambies algo, se guarda solo el archivo ruleta-de-tareas/registro.csv en ese repositorio. La llave se queda en este móvil."));
     }else{
       f6.append(el("div", "ayuda", "Repositorio: " + esc(S.gh.repo) + " · archivo ruleta-de-tareas/registro.csv"));
+      f6.append(el("div", "ayuda", "Las tandas que haces con Lumen se recogen solas al abrir la app, de ruleta-de-tareas/de-lumen.csv."));
       const fg = el("div", "fila-btn");
       if(S.gh.error && /Otro aparato/.test(S.gh.error)) fg.append(boton("Usar este", "", async () => { const ok = await sincronizar(true, true); toast(ok ? "Ahora guarda este aparato" : "No se ha podido: " + S.gh.error); pinta(c); }));
       fg.append(boton("Mandar ahora", "", async () => { const ok = await sincronizar(true); toast(ok ? "Guardado en GitHub" : "No se ha podido: " + S.gh.error); }),
@@ -1432,6 +1433,64 @@ async function sincronizar(forzar, tomar){
     if(S.gh && S.gh.pendiente && !S.gh.error && ghCambios !== n){ ghT = setTimeout(() => sincronizar(), 2000); }
   }
 }
+/* ---------- lo que apunta Lumen ----------
+   Lumen (el asistente del ordenador) deja en ruleta-de-tareas/de-lumen.csv las tandas que se hacen con él,
+   con el mismo formato que las filas «registro» de la copia. La app las recoge al abrirse y las mete en el
+   registro como si se hubieran cerrado aquí. Ese archivo solo lo escribe Lumen; registro.csv, solo la app. */
+let lumenEnCurso = false;
+function recogerDeLumen(texto){
+  const g = S.gh, vistas = new Set(Array.isArray(g.lumenVistas) ? g.lumenVistas : []);
+  const tenidas = new Set(S.reg.map(r => r.fecha));
+  // la que está en el reloj y aquella a la que volverás tras el descanso no se tocan
+  const enUso = [S.T && S.T.tipo === "tarea" ? S.T.id : null, S.T ? S.T.vuelta : null].filter(Boolean);
+  const N = s => String(s).trim().toLowerCase();
+  const filas = texto.replace(/^﻿/, "").split(/\r?\n/).map(l => l.split(";").map(v => v.trim()))
+    .filter(c => c[0] === "registro" && /^\d{4}-\d{2}-\d{2}T/.test(c[1] || "") && !isNaN(+new Date(c[1])) && c[2] && +c[4] > 0)
+    .sort((a, b) => +new Date(a[1]) - +new Date(b[1]));
+  const nuevas = [];
+  filas.forEach(c => {
+    const fecha = c[1], fija = c[3] === "fija", res = c[5] === "a medias" ? "a medias" : "terminada", id = c[12];
+    // cada tanda se recoge una sola vez: si luego la borras del registro, no vuelve
+    if(vistas.has(fecha)) return;
+    vistas.add(fecha);
+    if(tenidas.has(fecha)) return;
+    const x = (idValido(id) && tareaPorId(id)) || S.tareas.find(y => y.fija === fija && N(y.t) === N(c[2])) || null;
+    const r = { t: x ? x.t : c[2], fija: x ? x.fija : fija, fecha, min: Math.min(240, Math.max(1, Math.round(+c[4]))), res };
+    if(x) r.id = x.id; else if(idValido(id)) r.id = id;
+    S.reg.push(r); tenidas.add(fecha); nuevas.push(r);
+    if(!x || enUso.includes(x.id)) return;
+    if(res === "terminada"){
+      if(x.fija){
+        const cuando = +new Date(fecha);
+        if(!x.hecha || !x.hechaEn || x.hechaEn < cuando){ x.medias = false; x.hecha = true; x.hechaEn = cuando; }
+      }else completar(x);
+    }else if(!x.hecha) x.medias = true;
+  });
+  if(nuevas.length) S.reg.sort((a, b) => (+new Date(a.fecha) || 0) - (+new Date(b.fecha) || 0));
+  g.lumenVistas = [...vistas].sort().slice(-400);
+  return nuevas;
+}
+async function traerDeLumen(){
+  if(!ghListo() || lumenEnCurso || girando) return;
+  lumenEnCurso = true;
+  const g = S.gh;
+  try{
+    const url = `https://api.github.com/repos/${g.repo.split("/").map(encodeURIComponent).join("/")}/contents/ruleta-de-tareas/de-lumen.csv`;
+    const r = await fetch(url, { headers: { Authorization: "Bearer " + g.token, Accept: "application/vnd.github+json" }, cache: "no-store" });
+    if(!r.ok) return;   // 404: Lumen todavía no ha apuntado nada
+    const j = await r.json();
+    // mismo archivo que la última vez, GitHub desconectado mientras tanto o la rueda girando: se deja para la siguiente
+    if(!j || !j.sha || j.sha === g.lumenSha || S.gh !== g || girando) return;
+    const bin = atob(String(j.content || "").replace(/\s+/g, ""));
+    const nuevas = recogerDeLumen(new TextDecoder().decode(Uint8Array.from(bin, ch => ch.charCodeAt(0))));
+    g.lumenSha = j.sha;
+    if(!nuevas.length){ guardar(true); return; }
+    guardar(); pintar();
+    revisarVueltas(true);
+    toast(nuevas.length === 1 ? `Lumen ha apuntado «${nuevas[0].t}»: ${nuevas[0].res}` : `Lumen ha apuntado ${nuevas.length} tandas`);
+  }catch(e){}
+  finally{ lumenEnCurso = false; }
+}
 function textoGh(){
   if(!ghListo()) return ["", "Sin conectar."];
   const g = S.gh;
@@ -1637,7 +1696,7 @@ document.addEventListener("click", () => { if(S.T && !S.T.pausa && !S.T.sonado &
 
 /* ---------- notificaciones (con la pantalla encendida) ---------- */
 if("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").then(r => r.update()).catch(() => {});
-const VERSION = "2.8";
+const VERSION = "2.9";
 async function comprobarVersion(){
   try{
     const r = await fetch("./index.html?v=" + Date.now(), { cache:"no-store" });
@@ -1902,6 +1961,7 @@ $("copia-luego").onclick = () => { S.copiaLuego = Date.now() + 7*DIA; guardar(tr
 document.addEventListener("visibilitychange", () => {
   if(document.hidden) return;
   comprobarVersion(); revisarVueltas(); pintarListas(); pintarAvisoCopia();
+  traerDeLumen();
   if(ghListo() && S.gh.pendiente) sincronizar();
   if(S.T){ pintarReloj(); despierto(true); if(resta() === 0) irAlReloj(); }
 });
@@ -1915,9 +1975,10 @@ if(S.T){ latir(); despierto(true); }
 else if(S.bloque) tarjetaBloque();
 $("pista").hidden = !!S.cfg.pistaVista;
 revisarVueltas();
-setInterval(() => { if(!document.hidden){ revisarVueltas(); if(ghListo() && S.gh.pendiente && !ghEnCurso) sincronizar(); } }, 60000);
-window.addEventListener("online", () => { if(ghListo() && S.gh.pendiente) sincronizar(); });
+setInterval(() => { if(!document.hidden){ revisarVueltas(); traerDeLumen(); if(ghListo() && S.gh.pendiente && !ghEnCurso) sincronizar(); } }, 60000);
+window.addEventListener("online", () => { traerDeLumen(); if(ghListo() && S.gh.pendiente) sincronizar(); });
 if(ghListo() && S.gh.pendiente) setTimeout(() => sincronizar(), 2500);
+if(ghListo()) setTimeout(traerDeLumen, 1200);
 </script>
 </body>
 </html>
